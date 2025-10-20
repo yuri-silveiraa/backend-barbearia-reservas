@@ -6,7 +6,6 @@ export class Time {
     public readonly barberId: string,
     public date: Date,
     public disponible: boolean = true,
-    public readonly createdAt: Date = new Date(),
     public appointments: Appointment[] = []
   ) {}
 
