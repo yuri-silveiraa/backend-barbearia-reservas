@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  BARBER
+  CLIENT
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  type      UserType
+  createdAt DateTime @default(now())
+  barber    Barber? @relation("UserBarber")
+  client    Client?  @relation("UserClient")
+}
+
+model Barber {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  isAdmin   Boolean  @default(false)
+  user      User   @relation("UserBarber", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  appointments Appointment[]
+  Balance   Balance?
+  times     Time[]
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  telephone String
+  user      User     @relation("UserClient", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  appointments Appointment[]
+}
+
+model Balance {
+  id        String   @id @default(uuid())
+  balance   Float    @default(0)
+  barberId  String   @unique
+  barber    Barber   @relation(fields: [barberId], references: [id])
+  payments  Payment[]
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  amount    Float    
+  balanceId String
+  balance   Balance   @relation(fields: [balanceId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  appointments Appointment[]
+}
+
+model Time {
+  id         String   @id @default(uuid())
+  disponible Boolean  @default(true)
+  date       DateTime
+  barberId   String
+  barber     Barber   @relation(fields: [barberId], references: [id])
+  appointments Appointment[]
+}
+
+model Appointment {
+  id         String   @id @default(uuid())
+  status     AppointmentStatus @default(SCHEDULED)
+  barberId   String
+  clientId   String
+  serviceId  String
+  timeId     String
+  service    Service    @relation(fields: [serviceId], references: [id])
+  client     Client     @relation(fields: [clientId], references: [id])
+  barber     Barber     @relation(fields: [barberId], references: [id])
+  time       Time       @relation(fields: [timeId], references: [id])
+  createdAt  DateTime @default(now())
+}
