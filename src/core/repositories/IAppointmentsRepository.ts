@@ -1,9 +1,9 @@
-import { Appointment } from '../../core/entities/Appointment';
+import { Appointment } from '../entities/Appointment';
 
 
 export interface IAppointmentsRepository {
-findById(id: string): Promise<any | null>;
+create(data: Omit<Appointment, 'id' | 'createdAt'>): Promise<Appointment>;
+findById(id: string): Promise<Appointment | null>;
 countByClientSince(clientId: string, since: Date): Promise<number>;
-createWithMarkTimeUnavailable(data: { barberId:string; clientId:string; serviceId:string; timeId:string }): Promise<any>;
-completeAndCreatePaymentTransaction(appointmentId: string): Promise<any>;
+updateStatus(id: string, status: string): Promise<void>;
 }
