@@ -4,7 +4,7 @@ export class Appointment {
   constructor(
     public readonly id: string,
     public barberId: string,
-    public clientId: string,
+    public readonly clientId: string,
     public serviceId: string,
     public timeId: string,
     public status: AppointmentStatus = "SCHEDULED",
