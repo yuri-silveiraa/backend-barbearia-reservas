@@ -1,0 +1,33 @@
+import { CreateUserDTO } from "../../../core/dtos/CreateUserDTO";
+import { User } from "../../../core/entities/User";
+import { IUsersRepository } from "../../../core/repositories/IUserRepository";
+import { prisma } from "../prisma/prismaClient";
+
+export class PrismaUsersRepository implements IUsersRepository {
+  async findByEmail(email: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { email },
+    });
+  }
+  async create(data: CreateUserDTO): Promise<User> {
+    const user = await prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        type: data.type,
+      }
+    });
+    return user;
+  }
+  async findById(id: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { id },
+    });
+  }
+  async deleteById(id: string): Promise<void> {
+    await prisma.user.delete({
+      where: { id },
+    });
+  }
+}
