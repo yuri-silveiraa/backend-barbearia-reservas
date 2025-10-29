@@ -6,6 +6,10 @@ export class RegisterUserController {
 
   async handle(req: Request, res: Response) {
     const user = await this.createUser.execute(req.body);
-    return res.status(201).send(user);
+    const data = {
+      name: user.name,
+      email: user.email
+    }
+    return res.status(201).send(data);
   }
 }

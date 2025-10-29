@@ -6,7 +6,7 @@ export function ensureAuthenticated(req: Request, res: Response, next: NextFunct
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "Token não fornecido" });
 
-  const [, token] = authHeader.split(" ");
+  const [ token ] = authHeader.split(" ");
 
   try {
     const decoded = jwt.verify(token, authConfig.secret) as { userId: string };
