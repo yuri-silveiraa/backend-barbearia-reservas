@@ -1,9 +1,9 @@
 import { CreateUserDTO } from "../../../core/dtos/CreateUserDTO";
 import { User } from "../../../core/entities/User";
-import { IUsersRepository } from "../../../core/repositories/IUserRepository";
+import { IUserRepository } from "../../../core/repositories/IUserRepository";
 import { prisma } from "../prisma/prismaClient";
 
-export class PrismaUsersRepository implements IUsersRepository {
+export class PrismaUsersRepository implements IUserRepository {
   async findByEmail(email: string): Promise<User | null> {
     return await prisma.user.findUnique({
       where: { email },
