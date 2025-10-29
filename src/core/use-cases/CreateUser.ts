@@ -3,12 +3,12 @@ import { User } from "../entities/User";
 import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
 import { IBarbersRepository } from "../repositories/IBarberRepository";
 import { IClientsRepository } from "../repositories/IClientRepository";
-import { IUsersRepository } from "../repositories/IUserRepository";
+import { IUserRepository } from "../repositories/IUserRepository";
 import  bcrypt  from "bcrypt";
 
 export class CreateUser {
   constructor(
-    private usersRepository: IUsersRepository,
+    private usersRepository: IUserRepository,
     private barbersRepository: IBarbersRepository,
     private clientsRepository: IClientsRepository
   ) {}
