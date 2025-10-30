@@ -10,7 +10,7 @@ export class FakeUsersRepository implements IUserRepository {
     return user || null;
   }
 
-  async create(data: Omit<User, "id">): Promise<User> {
+  async create(data: Omit<User, "id" >): Promise<User> {
     const newUser: User = {
       id: String(this.users.length + 1),
       ...data,
