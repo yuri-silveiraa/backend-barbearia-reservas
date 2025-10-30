@@ -1,3 +1,4 @@
+import { AuthenticateDTO } from "../dtos/AuthenticateDTO";
 import { InvalidCredentialsError } from "../errors/InvalidCredentialsError";
 import { IUserRepository } from "../repositories/IUserRepository";
 import  bcrypt  from "bcrypt";
@@ -7,12 +8,15 @@ export class AuthenticateUser {
     private usersRepository: IUserRepository
   ) {}
 
-  async execute(email: string, password: string) {
-    const user = await this.usersRepository.findByEmail(email);
-    const passwordMatch = await bcrypt.compare(password, user.password);
+  async execute(req: AuthenticateDTO) {
+    const user = await this.usersRepository.findByEmail(req.email);
+    if (!user) {
+      return new InvalidCredentialsError();
+    }
 
-    if (!user || !passwordMatch) {
-      throw new InvalidCredentialsError();
+    const passwordMatch = await bcrypt.compare(req.password, user.password);
+    if (!passwordMatch) {
+      return new InvalidCredentialsError();
     }
 
     return user;
