@@ -32,7 +32,6 @@ describe("AuthenticateUser", () => {
       password: "123456",
     };
     const response = await sut.execute(req);
-    console.log(response);
 
     expect(response).toEqual(userValid);
   });

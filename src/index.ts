@@ -2,6 +2,9 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import { errorHandler } from './infra/http/middlewares/errorHandler';
 import { userRoutes } from './infra/http/routes/userRoutes';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const port = 3000;
