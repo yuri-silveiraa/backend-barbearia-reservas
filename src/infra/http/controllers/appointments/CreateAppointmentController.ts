@@ -1,7 +1,6 @@
 import { CreateAppointment } from "../../../../core/use-cases/CreateAppointment";
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthenticatedRequest } from "../../middlewares/ensureAuthenticated";
-import { IClientsRepository } from "../../../../core/repositories/IClientRepository";
 
 export class CreateAppointmentController {
   constructor(
