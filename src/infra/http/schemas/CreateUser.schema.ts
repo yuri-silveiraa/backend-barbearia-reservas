@@ -7,5 +7,5 @@ export const CreateUserSchema = z.object({
   type: z.enum(["BARBER", "CLIENT"], {
     message: "Tipo de usuário inválido.",
   }),
-  telephone: z.string().trim().min(9, "Telefone invalido")
+  telephone: z.string().trim().min(9, "Telefone invalido").optional(),
 });

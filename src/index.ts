@@ -1,8 +1,8 @@
 import express from 'express';
-import type { Request, Response } from 'express';
 import { errorHandler } from './infra/http/middlewares/errorHandler';
 import { userRoutes } from './infra/http/routes/userRoutes';
 import dotenv from 'dotenv';
+import { appointmentRoute } from './infra/http/routes/appointmentRoutes';
 
 dotenv.config();
 
@@ -11,11 +11,8 @@ const port = 3000;
 
 app.use(express.json());
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello, World!');
-});
-
 app.use('/user', userRoutes);
+app.use('/appointment', appointmentRoute);
 
 app.use(errorHandler);
 app.listen(port, () => {
