@@ -1,18 +1,23 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { authConfig } from "../../../config/auth";
 
-export function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
+export interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+  };
+}
+
+export async function ensureAuthenticated(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "Token não fornecido" });
 
   const [ token ] = authHeader.split(" ");
 
   try {
-    const decoded = jwt.verify(token, authConfig.secret) as { userId: string };
-    (req as any).user = { id: decoded.userId };
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET) as { userId: string };
+    req.user = { id: decoded.userId };
     next();
-  } catch {
-    return res.status(401).json({ message: "Token inválido" });
+  } catch (error) {
+    res.status(401).json({ message: "Token inválido ou expirado" });
   }
 }
