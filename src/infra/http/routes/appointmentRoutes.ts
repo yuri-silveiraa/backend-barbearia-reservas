@@ -6,6 +6,8 @@ import { AuthenticatedRequest, ensureAuthenticated } from "../middlewares/ensure
 import { PrismaClientRepository } from "../../database/repositories/PrismaClientRepository";
 import { validate } from "../middlewares/validate";
 import { CreateAppointmentSchema } from "../schemas/CreateAppointment.schema";
+import { ListClientAppointmentsController } from "../controllers/appointments/ListClientAppointmentsController";
+import { ListClientAppointments } from "../../../core/use-cases/ListClientAppointments";
 
 Router()
 
@@ -14,6 +16,8 @@ const appointmentRepo = new PrismaAppointmentRepository();
 const clientRepository = new PrismaClientRepository();
 const createAppointment = new CreateAppointment(appointmentRepo, clientRepository);
 const createAppointmentController = new CreateAppointmentController(createAppointment);
+const listClientAppointments = new ListClientAppointments(appointmentRepo, clientRepository);
+const listClientAppointmentsController = new ListClientAppointmentsController(listClientAppointments);
 
 appointmentRoute.post(
   "/create",
@@ -21,5 +25,11 @@ appointmentRoute.post(
   validate(CreateAppointmentSchema),
   (req, res) => createAppointmentController.handle(req as AuthenticatedRequest, res)
 );
+
+appointmentRoute.get(
+  "/client-appointments",
+  ensureAuthenticated,
+  async (req, res) => listClientAppointmentsController.handle(req as AuthenticatedRequest, res)
+)
 
 export { appointmentRoute };

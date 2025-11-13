@@ -15,9 +15,9 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
       return appointment;
   }
 
-  async findById(id: string): Promise<Appointment | null> {
-    return await prisma.appointment.findUnique({
-      where: { id },
+  async findByClientId(id: string): Promise<Appointment[] | null> {
+    return await prisma.appointment.findMany({
+      where: { clientId: id },
     });
   }
 
