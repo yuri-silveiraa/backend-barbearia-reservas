@@ -29,7 +29,7 @@ appointmentRoute.post(
 appointmentRoute.get(
   "/client-appointments",
   ensureAuthenticated,
-  async (req, res) => listClientAppointmentsController.handle(req as AuthenticatedRequest, res)
+  (req, res) => listClientAppointmentsController.handle(req as AuthenticatedRequest, res)
 )
 
 export { appointmentRoute };
