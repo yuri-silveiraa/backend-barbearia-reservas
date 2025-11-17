@@ -11,10 +11,9 @@ export class CreateTime {
 
   async execute(data: CreateTimeDTO): Promise<Time> {
     const barber = await this.barberRepository.findByUserId(data.barberId);
-    const time = await this.timeRepository.create({
-      date: data.date,
-      barberId: barber.id
-    });
+    data.barberId = barber.id;
+    const time = await this.timeRepository.create(data);
+    
     return time;
   }
 }
