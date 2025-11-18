@@ -5,8 +5,8 @@ import { PrismaUsersRepository } from "../../database/repositories/PrismaUsersRe
 import { PrismaClientRepository } from "../../database/repositories/PrismaClientRepository";
 import { PrismaBarberRepository } from "../../database/repositories/PrismaBarberReposiry";
 import { validate } from "../middlewares/validate";
-import { CreateUserSchema } from "../schemas/CreateUser.schema";
-import { LoginSchema } from "../schemas/Login.Schema";
+import { CreateUserSchema } from "../schemas/input/CreateUser.schema";
+import { LoginSchema } from "../schemas/input/Login.Schema";
 import { AuthenticateUser } from "../../../core/use-cases/AuthenticateUser";
 import { LoginUserController } from "../controllers/users/LoginUserController";
 

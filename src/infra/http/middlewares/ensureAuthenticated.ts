@@ -1,11 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
-export interface AuthenticatedRequest extends Request {
-  user: {
-    id: string;
-  };
-}
+import { AuthenticatedRequest } from "../helpers/requestInterface";
 
 export async function ensureAuthenticated(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;

@@ -2,12 +2,13 @@ import { Router } from "express";
 import { CreateTimeController } from "../controllers/times/CreateTimeController";
 import { CreateTime } from "../../../core/use-cases/CreateTime";
 import { PrismaBarberRepository } from "../../database/repositories/PrismaBarberReposiry";
-import { AuthenticatedRequest, ensureAuthenticated } from "../middlewares/ensureAuthenticated";
+import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
 import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
-import { CreateTimeSchema } from "../schemas/CreateTime.schema";
+import { CreateTimeSchema } from "../schemas/input/CreateTime.schema";
 import { validate } from "../middlewares/validate";
 import { ListTimeDisponibleController } from "../controllers/times/ListTimeDisponibleController";
 import { ListTimeDisponible } from "../../../core/use-cases/ListTimeDisponible";
+import { AuthenticatedRequest } from "../helpers/requestInterface";
 
 Router();
 
