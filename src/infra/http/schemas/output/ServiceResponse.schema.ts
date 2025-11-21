@@ -4,10 +4,10 @@ export const ServiceResponseSchema = z.array(
   z.object({
     name: z.string(),
     price: z.number(),
-    description: z.string(),
+    description: z.string().optional(),
   }).transform((service) => ({
     nome: service.name,
     preço: service.price.toFixed(2),
-    descrição: service.description,
+    descrição: service.description? service.description : "Sem descrição",
   }))
 );

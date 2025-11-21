@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { CreateTime } from "../../../../core/use-cases/CreateTime";
-import { AuthenticatedRequest } from "../../middlewares/ensureAuthenticated";
+import { AuthenticatedRequest } from "../../helpers/requestInterface";
 
 export class CreateTimeController {
   constructor(
