@@ -32,6 +32,14 @@ export class PrismaUsersRepository implements IUserRepository {
           userId: user.id,
         }
       });
+      await prisma.balance.create({
+        data: {
+          barber: {
+            connect: { userId: user.id }
+          },
+          balance: 0,
+        }
+      });
     }
     return user;
   }
