@@ -17,14 +17,18 @@ export class AttendAppointment {
 
   async execute(data: AttendAppointmentDTO): Promise<void> {
     const barber = await this.barberRepository.findByUserId(data.userId);
-    if (!barber) {
+    if (!barber)
       throw new NoAuthorizationError();
-    }
+    
     const appointment = await this.appointmentRepository.findById(data.id);
     const service = await this.serviceRepository.findById(appointment.serviceId);
     const balance = await this.balanceRepository.findByBarberId(barber.id);
     
+    if(barber.id !== appointment.barberId)
+      throw new NoAuthorizationError();
+    
     await this.appointmentRepository.updateStatus(data.id, data.status);
     await this.paymentRepository.create({amount: service.price, balanceId: balance.id});
+    await this.balanceRepository.updateBalance(balance.id, balance.balance + service.price);
   }
 }

@@ -19,7 +19,7 @@ export class PrismaBalanceRepository implements IBalanceRepository {
   async updateBalance(id: string, amount: number): Promise<void> {
     await prisma.balance.update({
       where: { id },
-      data: { balance: amount },
+      data: { balance: amount , atualizedAt: new Date() },
     });
   }
 }
