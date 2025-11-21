@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum UserType {
@@ -54,6 +53,7 @@ model Balance {
   balance   Float    @default(0)
   barberId  String   @unique
   barber    Barber   @relation(fields: [barberId], references: [id])
+  atualizedAt DateTime @updatedAt
   payments  Payment[]
 }
 

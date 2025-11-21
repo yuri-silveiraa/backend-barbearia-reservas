@@ -18,6 +18,21 @@ export class PrismaUsersRepository implements IUserRepository {
         type: data.type,
       }
     });
+    if (user.type == "CLIENT") {
+      await prisma.client.create({
+        data: {
+          userId: user.id,
+          telephone: data.telephone,
+        }
+      });
+    }
+    if (user.type == "BARBER") {
+      await prisma.barber.create({
+        data: {
+          userId: user.id,
+        }
+      });
+    }
     return user;
   }
   async findById(id: string): Promise<User | null> {
