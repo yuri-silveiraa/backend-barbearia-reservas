@@ -2,8 +2,6 @@ import { Router } from "express";
 import { RegisterUserController } from "../controllers/users/RegisterUserController";
 import { CreateUser } from "../../../core/use-cases/CreateUser";
 import { PrismaUsersRepository } from "../../database/repositories/PrismaUsersRepository";
-import { PrismaClientRepository } from "../../database/repositories/PrismaClientRepository";
-import { PrismaBarberRepository } from "../../database/repositories/PrismaBarberReposiry";
 import { validate } from "../middlewares/validate";
 import { CreateUserSchema } from "../schemas/input/CreateUser.schema";
 import { LoginSchema } from "../schemas/input/Login.Schema";
@@ -14,11 +12,9 @@ Router();
 
 const userRoutes = Router();
 
-const barberRepo = new PrismaBarberRepository();
-const clientRepo = new PrismaClientRepository();
 const userRepo = new PrismaUsersRepository();
 
-const createUser = new CreateUser(userRepo, barberRepo, clientRepo);
+const createUser = new CreateUser(userRepo);
 const registerController = new RegisterUserController(createUser);
 
 const authenticateUser = new AuthenticateUser(userRepo);
