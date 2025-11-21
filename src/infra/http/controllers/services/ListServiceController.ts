@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { ListService } from "../../../../core/use-cases/ListService";
 import { ServiceResponseSchema } from "../../schemas/output/ServiceResponse.schema";
 
