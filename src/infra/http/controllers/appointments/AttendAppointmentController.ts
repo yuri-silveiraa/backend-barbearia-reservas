@@ -3,7 +3,10 @@ import { AttendAppointment } from "../../../../core/use-cases/AttendAppointment"
 import { AuthenticatedRequest } from "../../helpers/requestInterface";
 
 export class AttendAppointmentController {
-  constructor(private attendAppointment: AttendAppointment) {}
+  constructor(
+    private attendAppointment: AttendAppointment
+  ) {}
+  
   async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     await this.attendAppointment.execute({ id: req.params.id, userId: req.user.id });
 

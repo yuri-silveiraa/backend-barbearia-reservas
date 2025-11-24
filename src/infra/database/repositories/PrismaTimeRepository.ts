@@ -29,7 +29,7 @@ export class PrismaTimeRepository implements ITimeRepository {
   async updateDisponible(timeId: string, disponible: boolean): Promise<void> {
     await prisma.time.update({
       where: { id: timeId },
-      data: { disponible },
+      data: { disponible: disponible },
     });
   }
 }
