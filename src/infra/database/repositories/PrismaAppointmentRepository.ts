@@ -25,6 +25,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     return await prisma.appointment.count({
       where: {
         clientId,
+        status: "SCHEDULED",
         createdAt: {
           gte: since,
         },
@@ -45,7 +46,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
       data: { status: "CANCELED" },
     });
   }
-  
+
   async findById(id: string): Promise<Appointment | null> {
     return await prisma.appointment.findUnique({
       where: { id },
