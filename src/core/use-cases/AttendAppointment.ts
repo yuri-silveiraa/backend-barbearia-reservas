@@ -27,7 +27,7 @@ export class AttendAppointment {
     if(barber.id !== appointment.barberId)
       throw new NoAuthorizationError();
     
-    await this.appointmentRepository.updateStatus(data.id, data.status);
+    await this.appointmentRepository.attend(data.id);
     await this.paymentRepository.create({amount: service.price, balanceId: balance.id});
     await this.balanceRepository.updateBalance(balance.id, balance.balance + service.price);
   }
