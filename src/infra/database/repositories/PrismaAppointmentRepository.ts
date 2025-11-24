@@ -1,4 +1,4 @@
-import { Appointment, AppointmentStatus } from "../../../core/entities/Appointment";
+import { Appointment } from "../../../core/entities/Appointment";
 import { IAppointmentsRepository } from "../../../core/repositories/IAppointmentRepository";
 import { prisma } from "../prisma/prismaClient";
 
@@ -32,13 +32,20 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     });
   }
   
-  async updateStatus(id: string, status: AppointmentStatus): Promise<void> {
+  async attend(id: string): Promise<void> {
     await prisma.appointment.update({
       where: { id },
-      data: { status: status },
+      data: { status: "COMPLETED" },
     });
   }
 
+  async canceled(id: string): Promise<void> {
+    await prisma.appointment.update({
+      where: { id },
+      data: { status: "CANCELED" },
+    });
+  }
+  
   async findById(id: string): Promise<Appointment | null> {
     return await prisma.appointment.findUnique({
       where: { id },

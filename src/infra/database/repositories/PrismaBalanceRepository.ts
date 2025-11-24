@@ -10,12 +10,6 @@ export class PrismaBalanceRepository implements IBalanceRepository {
     
   }
 
-  async deleteById(id: string): Promise<void> {
-    await prisma.balance.delete({
-      where: { id },
-    });
-  }
-
   async updateBalance(id: string, amount: number): Promise<void> {
     await prisma.balance.update({
       where: { id },
