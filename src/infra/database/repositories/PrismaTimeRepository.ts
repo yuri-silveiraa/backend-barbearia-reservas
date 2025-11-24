@@ -19,6 +19,9 @@ export class PrismaTimeRepository implements ITimeRepository {
         barberId: barberId,
         disponible: true
        },
+      orderBy: {
+        date: "asc",
+      }
     });
     return times;
   }

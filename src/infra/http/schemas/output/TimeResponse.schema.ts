@@ -11,7 +11,7 @@ export const TimesResponseSchema = z.array(
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(new Date(time.date)),
+    }).format(new Date(time.date).getTime() + 3 * 60 * 60 * 1000),
     id: time.id,
   }))
 );
