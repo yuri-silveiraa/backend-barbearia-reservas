@@ -5,5 +5,6 @@ export interface IAppointmentsRepository {
   findByClientId(id: string): Promise<Appointment[] | null>;
   findById(id: string): Promise<Appointment | null>;
   countByClientSince(clientId: string, since: Date): Promise<number>;
-  updateStatus(id: string, status: string): Promise<void>;
+  attend(id: string, status: string): Promise<void>;
+  canceled(id: string): Promise<void>;
 }
