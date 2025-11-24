@@ -16,6 +16,8 @@ import { PrismaServiceRepository } from "../../database/repositories/PrismaServi
 import { AttendAppointmentController } from "../controllers/appointments/AttendAppointmentController";
 import { PrismaBalanceRepository } from "../../database/repositories/PrismaBalanceRepository";
 import { PrismaPaymentRepository } from "../../database/repositories/PrismaPaymentRepository";
+import { CanceledAppointment } from "../../../core/use-cases/CanceledAppointment";
+import { CanceledAppointmentController } from "../controllers/appointments/CanceledAppointmentController";
 
 Router()
 
@@ -32,7 +34,9 @@ const createAppointmentController = new CreateAppointmentController(createAppoin
 const listClientAppointments = new ListClientAppointments(appointmentRepo, clientRepository);
 const listClientAppointmentsController = new ListClientAppointmentsController(listClientAppointments);
 const attendAppointment = new AttendAppointment(appointmentRepo, barberRepo, paymentRepo, serviceRepo, balanceRepo);
+const canceledAppointment = new CanceledAppointment(appointmentRepo, clientRepository);
 const attendAppointmentController = new AttendAppointmentController(attendAppointment);
+const canceledAppointmentController = new CanceledAppointmentController(canceledAppointment);
 
 appointmentRoute.use(ensureAuthenticated);
 
@@ -50,6 +54,11 @@ appointmentRoute.get(
 appointmentRoute.patch(
   "/attend/:id",
   (req, res) => attendAppointmentController.handle(req as unknown as AuthenticatedRequest, res)
+);
+
+appointmentRoute.patch(
+  "/cancel/:id",
+  (req, res) => canceledAppointmentController.handle(req as unknown as AuthenticatedRequest, res)
 );
 
 export { appointmentRoute };
