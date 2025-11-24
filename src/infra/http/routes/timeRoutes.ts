@@ -30,7 +30,7 @@ timeRoutes.post(
 );
 
 timeRoutes.get(
-  "/:id",
+  "/:barberId",
   (req, res) => listTimeDisponibleController.handle(req , res)
 )
 
