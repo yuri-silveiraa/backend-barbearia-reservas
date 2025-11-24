@@ -33,6 +33,7 @@ model Barber {
   userId    String   @unique
   isAdmin   Boolean  @default(false)
   user      User   @relation("UserBarber", fields: [userId], references: [id])
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   appointments Appointment[]
   Balance   Balance?
