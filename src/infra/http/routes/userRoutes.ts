@@ -26,7 +26,7 @@ userRoutes.post(
   (req, res) => registerController.handle(req, res)
 );
 
-userRoutes.get(
+userRoutes.post(
   "/login",
   validate(LoginSchema),
   (req, res) => loginController.handle(req, res)
