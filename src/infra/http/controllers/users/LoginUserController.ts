@@ -9,6 +9,6 @@ export class LoginUserController {
   async handle(req: Request, res: Response) {
     const user = await this.authenticateUser.execute(req.body) as User;
     const token = sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    return res.status(200).json({ token });
+    return res.status(200).json({ token: token, user: user });
   }
 }
