@@ -6,6 +6,7 @@ import { appointmentRoute } from './infra/http/routes/appointmentRoutes';
 import { timeRoutes } from './infra/http/routes/timeRoutes';
 import { serviceRoutes } from './infra/http/routes/serviceRoutes';
 import cors from "cors";
+import { barberRoutes } from './infra/http/routes/barberRoutes';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/user', userRoutes);
 app.use('/appointment', appointmentRoute);
 app.use('/time', timeRoutes);
 app.use('/service', serviceRoutes);
+app.use('/barber', barberRoutes);
 
 app.use(errorHandler);
 app.listen(port, () => {

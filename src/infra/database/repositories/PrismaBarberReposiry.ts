@@ -1,3 +1,4 @@
+import { BarberDTO } from "../../../core/dtos/BarberDTO";
 import { Barber } from "../../../core/entities/Barber";
 import { IBarbersRepository } from "../../../core/repositories/IBarberRepository";
 import { prisma } from "../prisma/prismaClient";
@@ -16,5 +17,25 @@ export class PrismaBarberRepository implements IBarbersRepository {
         isActive: false,
       },
     });
+  }
+
+  async getAllBarbers(): Promise<BarberDTO[]> {
+    const barbers = await prisma.barber.findMany({
+      where: { isActive: true },
+      include: {
+        user: { select: { name: true }},
+      }
+    });
+    
+    const barber = barbers.map((b) => ({
+      id: b.id,
+      userId: b.userId,
+      name: b.user.name,
+      isAdmin: b.isAdmin,
+      isActive: b.isActive,
+      createdAt: b.createdAt,
+    }));
+
+    return barber;
   }
 }
