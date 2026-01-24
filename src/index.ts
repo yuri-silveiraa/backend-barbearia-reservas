@@ -7,7 +7,8 @@ import { timeRoutes } from './infra/http/routes/timeRoutes';
 import { serviceRoutes } from './infra/http/routes/serviceRoutes';
 import cors from "cors";
 import { barberRoutes } from './infra/http/routes/barberRoutes';
-
+import swaggerUi from 'swagger-ui-express';
+import swaggerFile from "./swagger-output.json";
 dotenv.config();
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/appointment', appointmentRoute);
 app.use('/time', timeRoutes);
 app.use('/service', serviceRoutes);
 app.use('/barber', barberRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 app.use(errorHandler);
 app.listen(port, () => {

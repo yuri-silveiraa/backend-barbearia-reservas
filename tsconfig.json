@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-
+    "resolveJsonModule": true,
     "module": "commonjs",
     "target": "ES6",
     "types": ["node","jest"],
@@ -12,7 +12,8 @@
     "esModuleInterop": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "allowImportingTsExtensions": false,
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*",],
   "exclude": ["node_modules"]
 }

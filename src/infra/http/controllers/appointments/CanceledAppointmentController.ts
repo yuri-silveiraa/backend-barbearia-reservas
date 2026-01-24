@@ -9,7 +9,7 @@ export class CanceledAppointmentController {
 
   async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     const clientId = req.user.id;
-    const appointmentId = req.params.id;
+    const appointmentId = req.params.id as string;
     await this.canceledAppointment.execute(clientId, appointmentId);
     return res.status(200).send("Cancelado com sucesso!");
   }

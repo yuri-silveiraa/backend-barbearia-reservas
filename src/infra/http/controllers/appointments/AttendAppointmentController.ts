@@ -8,7 +8,7 @@ export class AttendAppointmentController {
   ) {}
   
   async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
-    await this.attendAppointment.execute({ id: req.params.id, userId: req.user.id });
+    await this.attendAppointment.execute({ id: req.params.id as string, userId: req.user.id });
 
     return res.status(200).send("Reserva atendida com sucesso");
   }
