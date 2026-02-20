@@ -8,6 +8,14 @@ export class LoginUserController {
   async handle(req: Request, res: Response) {
     const user = await this.authenticateUser.execute(req.body) as User;
     const token = sign({ userId: user.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
-    return res.status(200).json({ token: token, user: user });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    return res.status(200).json({ user });
   }
 }

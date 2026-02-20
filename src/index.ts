@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { errorHandler } from './infra/http/middlewares/errorHandler';
 import { userRoutes } from './infra/http/routes/userRoutes';
 import { appointmentRoute } from './infra/http/routes/appointmentRoutes';
@@ -19,6 +20,8 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
+app.use(cookieParser());
 
 app.use(express.json());
 

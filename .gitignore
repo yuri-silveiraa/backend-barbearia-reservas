@@ -4,3 +4,4 @@ package-lock.json
 /src/generated/prisma
 
 /src/generated/prisma
+/dist
