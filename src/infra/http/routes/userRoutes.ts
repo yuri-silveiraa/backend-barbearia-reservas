@@ -8,8 +8,6 @@ import { LoginSchema } from "../schemas/input/Login.Schema";
 import { AuthenticateUser } from "../../../core/use-cases/AuthenticateUser";
 import { LoginUserController } from "../controllers/users/LoginUserController";
 
-Router();
-
 const userRoutes = Router();
 
 const userRepo = new PrismaUsersRepository();
@@ -30,6 +28,15 @@ userRoutes.post(
   "/login",
   validate(LoginSchema),
   (req, res) => loginController.handle(req, res)
-)
+);
+
+userRoutes.post("/logout", (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
+  return res.status(200).json({ message: "Logout realizado com sucesso" });
+});
 
 export { userRoutes };
