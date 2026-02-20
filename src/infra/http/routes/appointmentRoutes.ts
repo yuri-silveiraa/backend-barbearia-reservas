@@ -19,8 +19,6 @@ import { PrismaPaymentRepository } from "../../database/repositories/PrismaPayme
 import { CanceledAppointment } from "../../../core/use-cases/CanceledAppointment";
 import { CanceledAppointmentController } from "../controllers/appointments/CanceledAppointmentController";
 
-Router()
-
 const appointmentRoute = Router();
 const appointmentRepo = new PrismaAppointmentRepository();
 const clientRepository = new PrismaClientRepository();
