@@ -22,7 +22,7 @@ export class PrismaUsersRepository implements IUserRepository {
       await prisma.client.create({
         data: {
           userId: user.id,
-          telephone: data.telephone,
+          telephone: data.telephone as string,
         }
       });
     }
