@@ -10,6 +10,15 @@ export class PrismaBalanceRepository implements IBalanceRepository {
     
   }
 
+  async create(data: { barberId: string }): Promise<Balance> {
+    return await prisma.balance.create({
+      data: {
+        barberId: data.barberId,
+        balance: 0,
+      },
+    });
+  }
+
   async updateBalance(id: string, amount: number): Promise<void> {
     await prisma.balance.update({
       where: { id },
