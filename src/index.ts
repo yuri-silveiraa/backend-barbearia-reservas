@@ -1,7 +1,7 @@
+import 'dotenv/config';
 import express from 'express';
 import { errorHandler } from './infra/http/middlewares/errorHandler';
 import { userRoutes } from './infra/http/routes/userRoutes';
-import dotenv from 'dotenv';
 import { appointmentRoute } from './infra/http/routes/appointmentRoutes';
 import { timeRoutes } from './infra/http/routes/timeRoutes';
 import { serviceRoutes } from './infra/http/routes/serviceRoutes';
@@ -9,7 +9,6 @@ import cors from "cors";
 import { barberRoutes } from './infra/http/routes/barberRoutes';
 import swaggerUi from 'swagger-ui-express';
 import swaggerFile from "./swagger-output.json";
-dotenv.config();
 
 const app = express();
 const port = 3000;
