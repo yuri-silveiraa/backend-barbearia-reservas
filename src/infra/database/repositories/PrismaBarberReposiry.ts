@@ -10,6 +10,15 @@ export class PrismaBarberRepository implements IBarbersRepository {
     });
   }
 
+  async create(data: { userId: string; isAdmin: boolean }): Promise<Barber> {
+    return await prisma.barber.create({
+      data: {
+        userId: data.userId,
+        isAdmin: data.isAdmin,
+      },
+    });
+  }
+
   async dismiss(barberId: string): Promise<void> {
     await prisma.barber.update({
       where: { id: barberId },
