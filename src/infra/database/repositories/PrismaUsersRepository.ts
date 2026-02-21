@@ -53,4 +53,14 @@ export class PrismaUsersRepository implements IUserRepository {
       where: { id },
     });
   }
+
+  async getMe(id: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        barber: true,
+      }
+    });
+  }
 }
