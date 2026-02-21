@@ -5,6 +5,7 @@ import { PrismaServiceRepository } from "../../database/repositories/PrismaServi
 import { PrismaBarberRepository } from "../../database/repositories/PrismaBarberReposiry";
 import { AuthenticatedRequest } from "../helpers/requestInterface";
 import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
+import { ensureAdmin } from "../middlewares/ensureRole";
 import { validate } from "../middlewares/validate";
 import { CreateServiceSchema } from "../schemas/input/CreateService.schema";
 import { ListService } from "../../../core/use-cases/ListService";
@@ -21,10 +22,10 @@ const listService = new ListService(serviceRepo);
 const createServiceController = new CreateServiceController(createService);
 const listServiceController = new ListServiceController(listService);
 
-serviceRoutes.use(ensureAuthenticated);
-
 serviceRoutes.post(
   "/create",
+  ensureAuthenticated,
+  ensureAdmin,
   validate(CreateServiceSchema),
   (req, res) => createServiceController.handle(req as AuthenticatedRequest, res)
 );

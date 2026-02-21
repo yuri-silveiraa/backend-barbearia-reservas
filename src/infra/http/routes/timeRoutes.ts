@@ -2,7 +2,7 @@ import { Router } from "express";
 import { CreateTimeController } from "../controllers/times/CreateTimeController";
 import { CreateTime } from "../../../core/use-cases/CreateTime";
 import { PrismaBarberRepository } from "../../database/repositories/PrismaBarberReposiry";
-import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
+import { ensureBarber } from "../middlewares/ensureRole";
 import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
 import { CreateTimeSchema } from "../schemas/input/CreateTime.schema";
 import { validate } from "../middlewares/validate";
@@ -21,10 +21,9 @@ const createTimeController = new CreateTimeController(createTime);
 const listTimeDisponible = new ListTimeDisponible(timeRepo);
 const listTimeDisponibleController = new ListTimeDisponibleController(listTimeDisponible);
 
-timeRoutes.use(ensureAuthenticated);
-
 timeRoutes.post(
   "/create",
+  ensureBarber,
   validate(CreateTimeSchema),
   (req, res) => createTimeController.handle(req as AuthenticatedRequest, res)
 );
