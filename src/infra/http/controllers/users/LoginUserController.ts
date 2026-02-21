@@ -3,6 +3,7 @@ import { AuthenticateUser } from '../../../../core/use-cases/AuthenticateUser';
 import { User } from '../../../../core/entities/User';
 import { sign } from 'jsonwebtoken';
 import { env } from '../../../../config/env';
+import { getAuthCookieOptions } from '../../helpers/authCookie';
 
 export class LoginUserController {
   constructor(private authenticateUser: AuthenticateUser) {}
@@ -15,12 +16,7 @@ export class LoginUserController {
 
     const token = sign({ userId: user.id }, env.jwtSecret, { expiresIn: '1d' });
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
-    });
+    res.cookie('token', token, getAuthCookieOptions(req));
 
     const { password, ...userWithoutPassword } = user as User & { password: string };
     return res.status(200).json({ user: userWithoutPassword });
