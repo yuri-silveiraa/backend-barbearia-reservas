@@ -4,6 +4,8 @@ import { AuthenticatedRequest } from "../helpers/requestInterface";
 import { env } from "../../../config/env";
 
 export async function ensureAuthenticated(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  console.log("Cookies recebidos:", req.cookies);
+  console.log("Headers:", req.headers.cookie);
   const token = req.cookies?.token;
   if (!token) return res.status(401).json({ message: "Token não fornecido" });
 
