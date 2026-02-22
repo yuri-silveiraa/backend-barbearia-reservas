@@ -13,6 +13,7 @@ const config: Config = {
   ],
   coverageDirectory: 'coverage',
   testMatch: ["**/__tests__/**/*.ts", "**/*.spec.ts"],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
 };
 
 export default config;
