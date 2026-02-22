@@ -211,7 +211,8 @@
       },
       "CreateUserRequest": {
         "type": "object",
-        "required": ["name", "email", "password", "type"],
+        "required": ["name", "email", "password"],
+        "description": "Cria um novo usuário do tipo CLIENT. Para criar barbeiros, use o endpoint POST /barber (requer permissão de admin).",
         "properties": {
           "name": {
             "type": "string",
@@ -227,11 +228,6 @@
             "type": "string",
             "minLength": 6,
             "example": "senha123"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["CLIENT", "BARBER"],
-            "example": "CLIENT"
           },
           "telephone": {
             "type": "string",
