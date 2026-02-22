@@ -64,10 +64,10 @@ Content-Type: application/json
   "name": "João Silva",
   "email": "joao@email.com",
   "password": "senha123",
-  "type": "CLIENT",
   "telephone": "11999999999"
 }
 ```
+**Nota**: O usuário é criado automaticamente como `CLIENT`. Para criar barbeiros, use o endpoint `POST /barber` (requer permissão de admin).
 
 2. **Login**
 ```http
@@ -291,9 +291,10 @@ Requerem cookie de autenticação:
   name: string;        // min 3 caracteres
   email: string;       // email válido
   password: string;    // min 6 caracteres
-  type: "CLIENT" | "BARBER";
-  telephone?: string;  // min 11 caracteres
+  telephone?: string;  // min 11 caracteres (opcional)
 }
+// Nota: O tipo é automaticamente definido como CLIENT
+// Para criar barbeiros, use o endpoint POST /barber (requer admin)
 ```
 
 ### Login
