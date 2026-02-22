@@ -3,7 +3,7 @@ import { CreateUser } from "../../../../core/use-cases/CreateUser";
 import { mockRequest, mockResponse } from "../../../../tests/utils/MockExpress";
 
 describe("RegisterUserController", () => {
-  it("deve registrar um novo usuário e retornar dados sem senha", async () => {
+  it("deve registrar um novo usuário cliente e retornar dados sem senha", async () => {
     const mockCreateUser = {
       execute: jest.fn().mockResolvedValue({
         id: "1",
@@ -22,7 +22,6 @@ describe("RegisterUserController", () => {
         name: "Yuri",
         email: "yuri@teste.com",
         password: "123456",
-        type: "CLIENT",
       },
     });
 
@@ -34,7 +33,6 @@ describe("RegisterUserController", () => {
       name: "Yuri",
       email: "yuri@teste.com",
       password: "123456",
-      type: "CLIENT",
     });
 
     expect(res.status).toHaveBeenCalledWith(201);
@@ -56,7 +54,6 @@ describe("RegisterUserController", () => {
         name: "Yuri",
         email: "yuri@teste.com",
         password: "123456",
-        type: "CLIENT",
       },
     });
 
