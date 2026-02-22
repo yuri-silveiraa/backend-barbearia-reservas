@@ -1,0 +1,1157 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Barbearia - Sistema de Reservas",
+    "description": "API completa para gerenciamento de barbearia com sistema de reservas, controle de barbeiros e clientes.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Suporte",
+      "email": "contato@barbearia.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor de Desenvolvimento"
+    },
+    {
+      "url": "https://api.barbearia.com",
+      "description": "Servidor de Produção"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Autenticação",
+      "description": "Endpoints para autenticação de usuários"
+    },
+    {
+      "name": "Agendamentos",
+      "description": "Endpoints para gerenciamento de agendamentos"
+    },
+    {
+      "name": "Barbeiros",
+      "description": "Endpoints para gerenciamento de barbeiros"
+    },
+    {
+      "name": "Serviços",
+      "description": "Endpoints para gerenciamento de serviços"
+    },
+    {
+      "name": "Horários",
+      "description": "Endpoints para gerenciamento de horários disponíveis"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token",
+        "description": "Autenticação via cookie HttpOnly contendo o token JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "example": "João Silva"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "joao@email.com"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["CLIENT", "BARBER"],
+            "example": "CLIENT"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Barber": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Carlos Barbeiro"
+          },
+          "isAdmin": {
+            "type": "boolean",
+            "example": false
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Corte Tradicional"
+          },
+          "preço": {
+            "type": "string",
+            "example": "35.00"
+          },
+          "descrição": {
+            "type": "string",
+            "example": "Corte masculino tradicional"
+          }
+        }
+      },
+      "Time": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "data": {
+            "type": "string",
+            "example": "25/12/2024, 10:00"
+          }
+        }
+      },
+      "Appointment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "barberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "serviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "client": {
+            "type": "string",
+            "example": "João Silva"
+          },
+          "barber": {
+            "type": "string",
+            "example": "Carlos Barbeiro"
+          },
+          "service": {
+            "type": "string",
+            "example": "Corte Tradicional"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["SCHEDULED", "COMPLETED", "CANCELED"],
+            "example": "SCHEDULED"
+          }
+        }
+      },
+      "DailyStats": {
+        "type": "object",
+        "properties": {
+          "completedCount": {
+            "type": "integer",
+            "example": 5,
+            "description": "Número de atendimentos concluídos no dia"
+          },
+          "scheduledCount": {
+            "type": "integer",
+            "example": 3,
+            "description": "Número de agendamentos pendentes no dia"
+          },
+          "totalRevenue": {
+            "type": "number",
+            "example": 250.00,
+            "description": "Faturamento total do dia"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Erro ao processar requisição"
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "required": ["name", "email", "password", "type"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "example": "João Silva"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "joao@email.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "senha123"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["CLIENT", "BARBER"],
+            "example": "CLIENT"
+          },
+          "telephone": {
+            "type": "string",
+            "minLength": 11,
+            "example": "11999999999"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "joao@email.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "senha123"
+          }
+        }
+      },
+      "CreateAppointmentRequest": {
+        "type": "object",
+        "required": ["barberId", "serviceId", "timeId"],
+        "properties": {
+          "barberId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "serviceId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174001"
+          },
+          "timeId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174002"
+          }
+        }
+      },
+      "CreateServiceRequest": {
+        "type": "object",
+        "required": ["name", "price"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "example": "Corte Tradicional"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0,
+            "example": 35.00
+          },
+          "description": {
+            "type": "string",
+            "example": "Corte masculino tradicional"
+          }
+        }
+      },
+      "CreateTimeRequest": {
+        "type": "object",
+        "required": ["date"],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-12-25T10:00:00Z"
+          }
+        }
+      },
+      "CreateBarberRequest": {
+        "type": "object",
+        "required": ["name", "email", "password"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "example": "Carlos Barbeiro"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "carlos@barbearia.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "senha123"
+          },
+          "isAdmin": {
+            "type": "boolean",
+            "default": false,
+            "example": false
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/user/create": {
+      "post": {
+        "tags": ["Autenticação"],
+        "summary": "Registrar novo usuário",
+        "description": "Cria um novo usuário no sistema. Clientes podem se registrar diretamente. Barbeiros devem ser criados por administradores.",
+        "operationId": "createUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email já cadastrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "tags": ["Autenticação"],
+        "summary": "Login de usuário",
+        "description": "Autentica um usuário e retorna um cookie HttpOnly com o token JWT. O cookie é enviado automaticamente nas requisições subsequentes.",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cookie HttpOnly contendo o token JWT",
+                "schema": {
+                  "type": "string",
+                  "example": "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Path=/; Max-Age=86400"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais inválidas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/logout": {
+      "post": {
+        "tags": ["Autenticação"],
+        "summary": "Logout de usuário",
+        "description": "Realiza o logout do usuário limpando o cookie de autenticação.",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Logout realizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Logout realizado com sucesso"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/me": {
+      "get": {
+        "tags": ["Autenticação"],
+        "summary": "Obter dados do usuário logado",
+        "description": "Retorna os dados do usuário atualmente autenticado.",
+        "operationId": "getMe",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do usuário",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointment/create": {
+      "post": {
+        "tags": ["Agendamentos"],
+        "summary": "Criar novo agendamento",
+        "description": "Cria um novo agendamento para o cliente autenticado. O cliente pode ter no máximo 1 agendamento por semana.",
+        "operationId": "createAppointment",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAppointmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Agendamento criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Appointment"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Limite de agendamentos excedido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointment/client-appointments": {
+      "get": {
+        "tags": ["Agendamentos"],
+        "summary": "Listar agendamentos do cliente",
+        "description": "Retorna todos os agendamentos do cliente autenticado.",
+        "operationId": "listClientAppointments",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de agendamentos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Appointment"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointment/attend/{id}": {
+      "patch": {
+        "tags": ["Agendamentos"],
+        "summary": "Marcar agendamento como atendido",
+        "description": "Marca um agendamento como concluído. Apenas o barbeiro responsável pode realizar esta ação.",
+        "operationId": "attendAppointment",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID do agendamento",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agendamento marcado como atendido",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Reserva atendida com sucesso"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointment/cancel/{id}": {
+      "patch": {
+        "tags": ["Agendamentos"],
+        "summary": "Cancelar agendamento",
+        "description": "Cancela um agendamento. Apenas o cliente proprietário pode cancelar.",
+        "operationId": "cancelAppointment",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID do agendamento",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agendamento cancelado",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Cancelado com sucesso!"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/barber": {
+      "get": {
+        "tags": ["Barbeiros"],
+        "summary": "Listar todos os barbeiros",
+        "description": "Retorna a lista de todos os barbeiros ativos. Não requer autenticação.",
+        "operationId": "listBarbers",
+        "responses": {
+          "200": {
+            "description": "Lista de barbeiros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Barber"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Barbeiros"],
+        "summary": "Criar novo barbeiro",
+        "description": "Cria um novo barbeiro no sistema. Apenas administradores podem realizar esta ação.",
+        "operationId": "createBarber",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBarberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Barbeiro criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso restrito a administradores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/barber/{id}": {
+      "delete": {
+        "tags": ["Barbeiros"],
+        "summary": "Desativar barbeiro",
+        "description": "Desativa um barbeiro (soft delete). Apenas administradores podem realizar esta ação.",
+        "operationId": "deleteBarber",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID do usuário do barbeiro",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Barbeiro desativado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Barbeiro desativado com sucesso"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso restrito a administradores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Barbeiro não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/barber/today-appointments": {
+      "get": {
+        "tags": ["Barbeiros"],
+        "summary": "Listar agendamentos do dia",
+        "description": "Retorna todos os agendamentos do barbeiro para o dia atual.",
+        "operationId": "getTodayAppointments",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de agendamentos do dia",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Appointment"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso restrito a barbeiros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/barber/daily-stats": {
+      "get": {
+        "tags": ["Barbeiros"],
+        "summary": "Estatísticas do dia",
+        "description": "Retorna estatísticas do dia atual para o barbeiro: atendimentos concluídos, agendamentos pendentes e faturamento.",
+        "operationId": "getDailyStats",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estatísticas do dia",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyStats"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso restrito a barbeiros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service": {
+      "get": {
+        "tags": ["Serviços"],
+        "summary": "Listar todos os serviços",
+        "description": "Retorna a lista de todos os serviços disponíveis. Não requer autenticação.",
+        "operationId": "listServices",
+        "responses": {
+          "200": {
+            "description": "Lista de serviços",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service/create": {
+      "post": {
+        "tags": ["Serviços"],
+        "summary": "Criar novo serviço",
+        "description": "Cria um novo serviço. Apenas administradores podem realizar esta ação.",
+        "operationId": "createService",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Serviço criado com sucesso",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Serviço criado com sucesso"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso restrito a administradores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/time/create": {
+      "post": {
+        "tags": ["Horários"],
+        "summary": "Criar horário disponível",
+        "description": "Cria um novo horário disponível para agendamento. Apenas barbeiros podem realizar esta ação.",
+        "operationId": "createTime",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTimeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Horário criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "barberId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "date": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "disponible": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso restrito a barbeiros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/time/{barberId}": {
+      "get": {
+        "tags": ["Horários"],
+        "summary": "Listar horários disponíveis do barbeiro",
+        "description": "Retorna os horários disponíveis de um barbeiro específico. Não requer autenticação.",
+        "operationId": "listTimes",
+        "parameters": [
+          {
+            "name": "barberId",
+            "in": "path",
+            "required": true,
+            "description": "ID do barbeiro",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de horários disponíveis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
