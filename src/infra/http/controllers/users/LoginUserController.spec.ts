@@ -7,7 +7,7 @@ import { mockRequest, mockResponse } from "../../../../tests/utils/MockExpress";
 dotenv.config()
 
 describe('LoginUserController', () => {
-  it('deve autenticar um usuário e retornar um token JWT', async () => {
+  it('deve autenticar um usuário e definir cookie HttpOnly', async () => {
     const mockAuthenticateUser = {
       execute: jest.fn().mockResolvedValue({
         id: "123",
@@ -18,8 +18,6 @@ describe('LoginUserController', () => {
         createdAt: new Date()
       }),
     };
-
-    process.env.JWT_SECRET = "test_secret";
 
     const controller = new LoginUserController(
       mockAuthenticateUser as any
@@ -42,8 +40,19 @@ describe('LoginUserController', () => {
     });
 
     expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.cookie).toHaveBeenCalledWith(
+      'token',
+      expect.any(String),
+      expect.objectContaining({
+        httpOnly: true,
+      })
+    );
     expect(res.json).toHaveBeenCalledWith({
-      token: expect.any(String)
+      user: expect.objectContaining({
+        id: "123",
+        name: "Yuri",
+        email: "yuri@teste.com",
+      })
     });
   });
 });
