@@ -20,8 +20,10 @@ model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
-  password  String
+  password  String?
   type      UserType
+  provider  String?
+  providerId String? @unique
   createdAt DateTime @default(now())
   barber    Barber? @relation("UserBarber")
   client    Client?  @relation("UserClient")

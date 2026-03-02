@@ -12,6 +12,7 @@ import { GetMeUser } from "../../../core/use-cases/getMeUser";
 import { AuthenticatedRequest } from "../helpers/requestInterface";
 import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
 import { getAuthCookieClearOptions } from "../helpers/authCookie";
+import { GoogleAuthController } from "../controllers/users/GoogleAuthController";
 
 const userRoutes = Router();
 
@@ -26,6 +27,8 @@ const loginController = new LoginUserController(authenticateUser);
 const getMeUser = new GetMeUser(userRepo);
 const getMeUserController = new GetMeUserController(getMeUser);
 
+const googleAuthController = new GoogleAuthController();
+
 userRoutes.post(
   "/create",
   validate(CreateUserSchema),
@@ -36,6 +39,11 @@ userRoutes.post(
   "/login",
   validate(LoginSchema),
   (req, res) => loginController.handle(req, res)
+);
+
+userRoutes.post(
+  "/google",
+  (req, res) => googleAuthController.handle(req, res)
 );
 
 userRoutes.post("/logout", (req, res) => {

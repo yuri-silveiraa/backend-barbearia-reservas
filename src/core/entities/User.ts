@@ -5,8 +5,10 @@ export class User {
     public readonly id: string,
     public name: string,
     public email: string,
-    public password: string,
+    public password: string | null,
     public type: UserType,
+    public provider?: string,
+    public providerId?: string,
     public readonly createdAt: Date = new Date()
   ) {}
 }

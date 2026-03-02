@@ -63,4 +63,10 @@ export class PrismaUsersRepository implements IUserRepository {
       }
     });
   }
+
+  async findByProviderId(providerId: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { providerId },
+    });
+  }
 }
