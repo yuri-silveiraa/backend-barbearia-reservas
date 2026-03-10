@@ -11,34 +11,30 @@ import { barberRoutes } from './infra/http/routes/barberRoutes';
 import swaggerUi from 'swagger-ui-express';
 import swaggerFile from "./swagger-output.json";
 import { env } from './config/env';
+import { csrfMiddleware, generateCsrfToken } from './infra/http/helpers/csrf';
 
 const app = express();
 const port = env.port;
 
 app.set("trust proxy", 1);
 
-const allowedLocalOrigins = [
-  /^http:\/\/localhost:\d+$/,
-  /^http:\/\/127\.0\.0\.1:\d+$/,
-];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-
-    const isAllowed = allowedLocalOrigins.some((pattern) => pattern.test(origin));
-    if (isAllowed) return callback(null, true);
-
-    return callback(new Error("Origin não permitida pelo CORS"));
-  },
+  origin: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type"],
+  allowedHeaders: ["Content-Type", "x-csrf-token"],
   credentials: true
 }));
 
 app.use(cookieParser());
 
 app.use(express.json());
+
+app.get('/csrf-token', (req, res) => {
+  const token = generateCsrfToken(res);
+  res.json({ csrfToken: token });
+});
+
+app.use(csrfMiddleware);
 
 app.use('/user', userRoutes);
 app.use('/appointment', appointmentRoute);

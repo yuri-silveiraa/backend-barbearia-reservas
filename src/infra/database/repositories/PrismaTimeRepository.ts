@@ -14,11 +14,36 @@ export class PrismaTimeRepository implements ITimeRepository {
   }
 
   async findByBarberId(barberId: string): Promise<Time[] | null> {
+    const now = new Date();
     const times = await prisma.time.findMany({
       where: { 
         barberId: barberId,
-        disponible: true
-       },
+        date: {
+          gte: now,
+        },
+        NOT: {
+          appointments: {
+            some: {},
+          },
+        },
+      },
+      orderBy: {
+        date: "asc",
+      }
+    });
+    return times;
+  }
+
+  async findAvailableByBarberId(barberId: string): Promise<Time[] | null> {
+    const now = new Date();
+    const times = await prisma.time.findMany({
+      where: { 
+        barberId: barberId,
+        disponible: true,
+        date: {
+          gte: now,
+        },
+      },
       orderBy: {
         date: "asc",
       }
@@ -30,6 +55,12 @@ export class PrismaTimeRepository implements ITimeRepository {
     await prisma.time.update({
       where: { id: timeId },
       data: { disponible: disponible },
+    });
+  }
+
+  async deleteById(timeId: string): Promise<void> {
+    await prisma.time.delete({
+      where: { id: timeId },
     });
   }
 }

@@ -1,37 +1,62 @@
-import { Router } from "express";
-import { CreateTimeController } from "../controllers/times/CreateTimeController";
-import { CreateTime } from "../../../core/use-cases/CreateTime";
+import { Router, Request } from "express";
 import { PrismaBarberRepository } from "../../database/repositories/PrismaBarberReposiry";
 import { ensureBarber } from "../middlewares/ensureRole";
 import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
-import { CreateTimeSchema } from "../schemas/input/CreateTime.schema";
 import { validate } from "../middlewares/validate";
-import { ListTimeDisponibleController } from "../controllers/times/ListTimeDisponibleController";
-import { ListTimeDisponible } from "../../../core/use-cases/ListTimeDisponible";
 import { AuthenticatedRequest } from "../helpers/requestInterface";
 
-Router();
+import { GenerateTimeSlotsController } from "../controllers/times/GenerateTimeSlotsController";
+import { GenerateTimeSlots } from "../../../core/use-cases/GenerateTimeSlots";
+import { GenerateTimeSlotsSchema } from "../schemas/input/GenerateTimeSlots.schema";
+
+import { ListMyTimeSlotsController } from "../controllers/times/ListMyTimeSlotsController";
+import { ListMyTimeSlots } from "../../../core/use-cases/ListMyTimeSlots";
+
+import { ListAvailableTimeSlotsController } from "../controllers/times/ListAvailableTimeSlotsController";
+import { ListAvailableTimeSlots } from "../../../core/use-cases/ListAvailableTimeSlots";
+
+import { DeleteTimeSlotController } from "../controllers/times/DeleteTimeSlotController";
+import { DeleteTimeSlot } from "../../../core/use-cases/DeleteTimeSlot";
 
 const timeRoutes = Router();
 
 const timeRepo = new PrismaTimeRepository();
 const barberRepo = new PrismaBarberRepository();
-const createTime = new CreateTime(timeRepo, barberRepo);
-const createTimeController = new CreateTimeController(createTime);
-const listTimeDisponible = new ListTimeDisponible(timeRepo);
-const listTimeDisponibleController = new ListTimeDisponibleController(listTimeDisponible);
+
+const generateTimeSlots = new GenerateTimeSlots(timeRepo, barberRepo);
+const generateTimeSlotsController = new GenerateTimeSlotsController(generateTimeSlots);
+
+const listMyTimeSlots = new ListMyTimeSlots(timeRepo, barberRepo);
+const listMyTimeSlotsController = new ListMyTimeSlotsController(listMyTimeSlots);
+
+const listAvailableTimeSlots = new ListAvailableTimeSlots(timeRepo);
+const listAvailableTimeSlotsController = new ListAvailableTimeSlotsController(listAvailableTimeSlots);
+
+const deleteTimeSlot = new DeleteTimeSlot(timeRepo, barberRepo);
+const deleteTimeSlotController = new DeleteTimeSlotController(deleteTimeSlot);
+
+timeRoutes.get(
+  "/",
+  (req, res) => listAvailableTimeSlotsController.handle(req as any, res)
+);
 
 timeRoutes.post(
-  "/create",
+  "/generate",
   ensureBarber,
-  validate(CreateTimeSchema),
-  (req, res) => createTimeController.handle(req as AuthenticatedRequest, res)
+  validate(GenerateTimeSlotsSchema),
+  (req, res) => generateTimeSlotsController.handle(req as AuthenticatedRequest, res)
 );
 
 timeRoutes.get(
-  "/:barberId",
-  (req, res) => listTimeDisponibleController.handle(req , res)
-)
+  "/my-times",
+  ensureBarber,
+  (req, res) => listMyTimeSlotsController.handle(req as AuthenticatedRequest, res)
+);
 
+timeRoutes.delete(
+  "/:id",
+  ensureBarber,
+  (req, res) => deleteTimeSlotController.handle(req as AuthenticatedRequest, res)
+);
 
 export { timeRoutes };
