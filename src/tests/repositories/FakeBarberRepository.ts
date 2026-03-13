@@ -10,7 +10,7 @@ export class FakeBarberRepository implements IBarbersRepository {
     return barber || null;
   }
 
-  async create(data: { userId: string; isAdmin: boolean }): Promise<Barber> {
+  async create(data: { userId: string; isAdmin: boolean; name?: string; password?: string; type?: string; email?: string; telephone?: string }): Promise<Barber> {
     const barber: Barber = {
       id: String(this.barbers.length + 1),
       userId: data.userId,

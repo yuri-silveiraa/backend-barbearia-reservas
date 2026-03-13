@@ -9,11 +9,10 @@ export class FakeClientRepository implements IClientsRepository {
     return client || null;
   }
 
-  async create(data: { userId: string; telephone: string }): Promise<Client> {
+  async create(data: { userId: string }): Promise<Client> {
     const client: Client = {
       id: String(this.clients.length + 1),
       userId: data.userId,
-      telephone: data.telephone,
       createdAt: new Date(),
     };
     this.clients.push(client);

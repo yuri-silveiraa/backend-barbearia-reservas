@@ -56,11 +56,13 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
     ).length;
   }
 
-  async attend(id: string): Promise<void> {
+  async attend(id: string): Promise<boolean> {
     const appointment = this.appointments.find(a => a.id === id);
-    if (appointment) {
+    if (appointment && appointment.status === "SCHEDULED") {
       appointment.status = "COMPLETED";
+      return true;
     }
+    return false;
   }
 
   async canceled(id: string): Promise<void> {
@@ -76,6 +78,7 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
       clientId: appointment.clientId,
       barberId: appointment.barberId,
       serviceId: appointment.serviceId,
+      timeId: appointment.timeId,
       client: "Client Name",
       barber: "Barber Name",
       service: "Service Name",

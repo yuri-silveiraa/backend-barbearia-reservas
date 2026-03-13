@@ -33,4 +33,9 @@ export class FakeUsersRepository implements IUserRepository {
     const user = this.users.find(u => u.id === id);
     return user || null;
   }
+
+  async findByProviderId(providerId: string): Promise<User | null> {
+    const user = this.users.find(u => u.providerId === providerId);
+    return user || null;
+  }
 }

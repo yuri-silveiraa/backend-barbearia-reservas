@@ -17,6 +17,7 @@ describe("CreateBarber", () => {
       email: "carlos@barbearia.com",
       password: "123456",
       type: "BARBER" as const,
+      telephone: "11999999999",
     };
 
     const user = await sut.execute(data, false);
@@ -43,6 +44,7 @@ describe("CreateBarber", () => {
       email: "admin@barbearia.com",
       password: "123456",
       type: "BARBER" as const,
+      telephone: "11999999999",
     };
 
     const user = await sut.execute(data, true);
@@ -57,6 +59,7 @@ describe("CreateBarber", () => {
       email: "carlos@barbearia.com",
       password: "123456",
       type: "BARBER" as const,
+      telephone: "11999999999",
     };
 
     await expect(sut.execute(data, false)).rejects.toThrow(UserAlreadyExistsError);

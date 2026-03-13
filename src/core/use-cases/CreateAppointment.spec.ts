@@ -1,24 +1,16 @@
 import { CreateAppointment } from "./CreateAppointment";
 import { FakeAppointmentRepository } from "../../tests/repositories/FakeAppointmentRepository";
 import { FakeClientRepository } from "../../tests/repositories/FakeClientRepository";
-import { FakeTimeRepository } from "../../tests/repositories/FakeTimeRepository";
 import { ClientScheduleLimitError } from "../errors/ClientScheduleLimitError";
 
 describe("CreateAppointment", () => {
   const appointmentRepository = new FakeAppointmentRepository();
   const clientRepository = new FakeClientRepository();
-  const timeRepository = new FakeTimeRepository();
-  const sut = new CreateAppointment(appointmentRepository, clientRepository, timeRepository);
+  const sut = new CreateAppointment(appointmentRepository, clientRepository);
 
   it("deve criar um agendamento com sucesso", async () => {
     await clientRepository.create({
       userId: "user-client-1",
-      telephone: "11999999999",
-    });
-
-    await timeRepository.create({
-      barberId: "barber-1",
-      date: new Date(),
     });
 
     const data = {
@@ -40,12 +32,6 @@ describe("CreateAppointment", () => {
   it("deve lançar erro se o cliente tiver mais de 1 agendamento na semana", async () => {
     await clientRepository.create({
       userId: "user-client-2",
-      telephone: "11999999998",
-    });
-
-    await timeRepository.create({
-      barberId: "barber-1",
-      date: new Date(),
     });
 
     const data = {

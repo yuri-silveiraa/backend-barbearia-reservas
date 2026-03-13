@@ -19,6 +19,7 @@ describe("AuthenticateUser", () => {
       email: "yuri@teste.com",
       password: "123456",
       type: "BARBER" as const,
+      telephone: "11999999999",
     };
     validUser.password = await bcrypt.hash(validUser.password, 6);
     const userValid = await usersRepository.create(validUser);
@@ -40,6 +41,7 @@ describe("AuthenticateUser", () => {
       email: "yuri2@teste.com",
       password: "123456",
       type: "BARBER" as const,
+      telephone: "11999999999",
     };
     validUser.password = await bcrypt.hash(validUser.password, 6);
     await usersRepository.create(validUser);

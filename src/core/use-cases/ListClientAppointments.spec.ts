@@ -15,7 +15,6 @@ describe("ListClientAppointments", () => {
   it("deve retornar lista de agendamentos do cliente", async () => {
     const client = await clientRepository.create({
       userId: "user-client-1",
-      telephone: "11999999999",
     });
 
     await appointmentRepository.create({
@@ -34,7 +33,6 @@ describe("ListClientAppointments", () => {
   it("deve retornar lista vazia se não houver agendamentos", async () => {
     const client = await clientRepository.create({
       userId: "user-client-2",
-      telephone: "11999999998",
     });
 
     const appointments = await sut.execute("user-client-2");

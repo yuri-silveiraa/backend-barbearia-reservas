@@ -12,6 +12,7 @@ describe("GetMeUser", () => {
       email: "yuri@teste.com",
       password: "hashed",
       type: "CLIENT",
+      telephone: "11999999999",
     });
 
     const user = await sut.execute(createdUser.id);
