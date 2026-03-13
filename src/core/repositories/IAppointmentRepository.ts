@@ -8,6 +8,6 @@ export interface IAppointmentsRepository {
   findByBarberIdToday(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]>;
   countByClientSince(clientId: string, since: Date): Promise<number>;
   countCompletedByBarberToday(barberId: string, date: Date): Promise<number>;
-  attend(id: string): Promise<void>;
+  attend(id: string): Promise<boolean>;
   canceled(id: string): Promise<void>;
 }

@@ -1,19 +1,38 @@
 import { AppointmentDTO } from "../../../core/dtos/AppointmentDTO";
 import { Appointment } from "../../../core/entities/Appointment";
+import { AppError } from "../../../core/errors/AppError";
 import { IAppointmentsRepository } from "../../../core/repositories/IAppointmentRepository";
 import { prisma } from "../prisma/prismaClient";
 
 export class PrismaAppointmentRepository implements IAppointmentsRepository {
   async create(data: Omit<Appointment, "id" | "createdAt" | "status">): Promise<Appointment> {
-    const appointment = await prisma.appointment.create({
-      data: {
-        barberId: data.barberId,
-        clientId: data.clientId,
-        serviceId: data.serviceId,
-        timeId: data.timeId
-      },
+    return await prisma.$transaction(async (tx) => {
+      const reservedTime = await tx.time.updateMany({
+        where: {
+          id: data.timeId,
+          barberId: data.barberId,
+          disponible: true,
+        },
+        data: {
+          disponible: false,
+        },
+      });
+
+      if (reservedTime.count === 0) {
+        throw new AppError("Horário indisponível para este barbeiro", 409);
+      }
+
+      const appointment = await tx.appointment.create({
+        data: {
+          barberId: data.barberId,
+          clientId: data.clientId,
+          serviceId: data.serviceId,
+          timeId: data.timeId
+        },
+      });
+
+      return appointment;
     });
-    return appointment;
   }
 
   async findByClientId(clientId: string): Promise<AppointmentDTO[]> {
@@ -25,6 +44,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
         clientId: true,
         barberId: true,
         serviceId: true,
+        timeId: true,
         client: {
           select: { user: { select: { name: true } } }
         },
@@ -48,6 +68,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     client: a.client.user.name,
     barber: a.barber.user.name,
     service: a.service.name,
+    timeId: a.timeId,
     time: a.time.date,
     status: a.status
   }));
@@ -66,11 +87,16 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     });
   }
   
-  async attend(id: string): Promise<void> {
-    await prisma.appointment.update({
-      where: { id },
+  async attend(id: string): Promise<boolean> {
+    const updated = await prisma.appointment.updateMany({
+      where: {
+        id,
+        status: "SCHEDULED",
+      },
       data: { status: "COMPLETED" },
     });
+
+    return updated.count > 0;
   }
 
   async canceled(id: string): Promise<void> {
@@ -97,10 +123,10 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
         clientId: true,
         barberId: true,
         serviceId: true,
+        timeId: true,
         client: {
           select: { 
-            user: { select: { name: true } },
-            telephone: true,
+            user: { select: { name: true, telephone: true } },
           }
         },
         barber: {
@@ -126,8 +152,10 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
       barberId: a.barberId,
       serviceId: a.serviceId,
       client: a.client.user.name,
+      clientTelephone: a.client.user.telephone,
       barber: a.barber.user.name,
       service: a.service.name,
+      timeId: a.timeId,
       time: a.time.date,
       status: a.status
     }));
@@ -160,6 +188,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
         clientId: true,
         barberId: true,
         serviceId: true,
+        timeId: true,
         client: {
           select: { user: { select: { name: true } } }
         },
@@ -181,6 +210,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
       clientId: appointment.clientId,
       barberId: appointment.barberId,
       serviceId: appointment.serviceId,
+      timeId: appointment.timeId,
       client: appointment.client.user.name,
       barber: appointment.barber.user.name,
       service: appointment.service.name,

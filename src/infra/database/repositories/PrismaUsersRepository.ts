@@ -16,13 +16,13 @@ export class PrismaUsersRepository implements IUserRepository {
         email: data.email,
         password: data.password,
         type: data.type,
+        telephone: data.telephone,
       }
     });
     if (user.type == "CLIENT") {
       await prisma.client.create({
         data: {
           userId: user.id,
-          telephone: data.telephone as string,
         }
       });
     }

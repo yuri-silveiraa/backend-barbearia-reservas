@@ -21,6 +21,7 @@ model User {
   name      String
   email     String   @unique
   password  String?
+  telephone String
   type      UserType
   provider  String?
   providerId String? @unique
@@ -44,7 +45,6 @@ model Barber {
 model Client {
   id        String   @id @default(uuid())
   userId    String   @unique
-  telephone String
   user      User     @relation("UserClient", fields: [userId], references: [id])
   createdAt DateTime @default(now())
   appointments Appointment[]

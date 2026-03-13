@@ -5,6 +5,7 @@ import { NoAuthorizationError } from "../errors/NoAuthorizationError";
 import { IPaymentRepository } from "../repositories/IPaymentRepository";
 import { IServiceRepository } from "../repositories/IServiceRepository";
 import { IBalanceRepository } from "../repositories/IBalanceRepository";
+import { AppError } from "../errors/AppError";
 
 export class AttendAppointment {
   constructor(
@@ -21,13 +22,32 @@ export class AttendAppointment {
       throw new NoAuthorizationError();
     
     const appointment = await this.appointmentRepository.findById(data.id);
-    const service = await this.serviceRepository.findById(appointment.serviceId);
-    const balance = await this.balanceRepository.findByBarberId(barber.id);
+    if (!appointment) {
+      throw new AppError("Agendamento não encontrado", 404);
+    }
     
     if(barber.id !== appointment.barberId)
       throw new NoAuthorizationError();
+
+    if (appointment.status !== "SCHEDULED") {
+      throw new AppError("Somente agendamentos marcados podem ser atendidos", 400);
+    }
+
+    const service = await this.serviceRepository.findById(appointment.serviceId);
+    if (!service) {
+      throw new AppError("Serviço não encontrado", 404);
+    }
+
+    const balance = await this.balanceRepository.findByBarberId(barber.id);
+    if (!balance) {
+      throw new AppError("Saldo do barbeiro não encontrado", 404);
+    }
     
-    await this.appointmentRepository.attend(data.id);
+    const attended = await this.appointmentRepository.attend(data.id);
+    if (!attended) {
+      throw new AppError("Somente agendamentos marcados podem ser atendidos", 400);
+    }
+
     await this.paymentRepository.create({amount: service.price, balanceId: balance.id});
     await this.balanceRepository.updateBalance(balance.id, balance.balance + service.price);
   }

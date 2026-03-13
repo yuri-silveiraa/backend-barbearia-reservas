@@ -9,6 +9,7 @@ type SeedUser = {
   email: string;
   password: string;
   type: UserType;
+  telephone: string;
 };
 
 type PublicSeedUser = {
@@ -16,6 +17,18 @@ type PublicSeedUser = {
   email: string;
   password: string;
 };
+
+const CLIENT_USERS_TOTAL = 30;
+const MIN_SERVICE_ROWS = 300;
+const MIN_TIME_ROWS = 300;
+const MIN_APPOINTMENT_ROWS = 300;
+const MIN_PAYMENT_ROWS = 300;
+
+const statusPool = [
+  AppointmentStatus.SCHEDULED,
+  AppointmentStatus.COMPLETED,
+  AppointmentStatus.CANCELED,
+];
 
 const firstNames = [
   "Ana",
@@ -65,6 +78,17 @@ function randomEmail(name: string) {
   return `${slug}.${Date.now()}${randomInt(1000, 9999)}@barbearia.local`;
 }
 
+async function clearDatabase() {
+  await prisma.appointment.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.time.deleteMany();
+  await prisma.service.deleteMany();
+  await prisma.client.deleteMany();
+  await prisma.balance.deleteMany();
+  await prisma.barber.deleteMany();
+  await prisma.user.deleteMany();
+}
+
 async function upsertUser(data: SeedUser) {
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -74,12 +98,14 @@ async function upsertUser(data: SeedUser) {
       name: data.name,
       password: hashedPassword,
       type: data.type,
+      telephone: data.telephone,
     },
     create: {
       name: data.name,
       email: data.email,
       password: hashedPassword,
       type: data.type,
+      telephone: data.telephone,
     },
   });
 }
@@ -98,11 +124,11 @@ async function upsertBarberProfile(userId: string, isAdmin: boolean) {
   });
 }
 
-async function upsertClientProfile(userId: string, telephone: string) {
+async function upsertClientProfile(userId: string) {
   await prisma.client.upsert({
     where: { userId },
-    update: { telephone },
-    create: { userId, telephone },
+    update: {},
+    create: { userId },
   });
 }
 
@@ -122,12 +148,11 @@ async function ensureService(name: string, description: string, price: number) {
   });
 }
 
-async function createRandomUsers(total: number) {
+async function createClientUsers(total: number) {
   const created: Array<{ id: string; type: UserType; email: string }> = [];
 
   for (let index = 0; index < total; index++) {
     const fullName = `${randomFrom(firstNames)} ${randomFrom(lastNames)}`;
-    const type = Math.random() > 0.5 ? UserType.BARBER : UserType.CLIENT;
     const email = randomEmail(fullName);
     const password = randomPassword();
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -137,84 +162,112 @@ async function createRandomUsers(total: number) {
         name: fullName,
         email,
         password: hashedPassword,
-        type,
+        type: UserType.CLIENT,
+        telephone: `11${randomInt(900000000, 999999999)}`,
       },
     });
 
-    if (type === UserType.BARBER) {
-      await upsertBarberProfile(user.id, false);
-    } else {
-      await upsertClientProfile(
-        user.id,
-        `11${randomInt(900000000, 999999999)}`
-      );
-    }
+    await upsertClientProfile(user.id);
 
-    created.push({ id: user.id, type, email });
+    created.push({ id: user.id, type: UserType.CLIENT, email });
   }
 
   return created;
 }
 
-async function seedTimesAndAppointments() {
-  const barbers = await prisma.barber.findMany({ include: { user: true } });
+async function seedServices(total: number) {
+  const baseServices = [
+    {
+      name: "Corte Tradicional",
+      description: "Corte masculino tradicional",
+      price: 200,
+    },
+    {
+      name: "Barba Completa",
+      description: "Modelagem e acabamento da barba",
+      price: 200,
+    },
+    {
+      name: "Corte + Barba",
+      description: "Pacote completo",
+      price: 200,
+    },
+    {
+      name: "Pigmentacao",
+      description: "Pigmentacao de barba/cabelo",
+      price: 200,
+    },
+    {
+      name: "Sobrancelha",
+      description: "Ajuste de sobrancelha",
+      price: 200,
+    },
+  ];
+
+  for (const service of baseServices) {
+    await ensureService(service.name, service.description, service.price);
+  }
+
+  for (let index = baseServices.length; index < total; index++) {
+    const serviceNumber = String(index + 1).padStart(3, "0");
+    await prisma.service.create({
+      data: {
+        name: `Servico ${serviceNumber}`,
+        description: `Servico adicional ${serviceNumber} para simular volume real`,
+        price: randomInt(45, 250),
+      },
+    });
+  }
+}
+
+async function seedTimes(total: number) {
+  const barbers = await prisma.barber.findMany();
+  if (!barbers.length) return [];
+
+  const createdTimes: Array<{ id: string; barberId: string }> = [];
+  const slotHours = [8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19];
+  const baseDate = new Date();
+  baseDate.setHours(0, 0, 0, 0);
+
+  for (let index = 0; index < total; index++) {
+    const barber = barbers[index % barbers.length];
+    const slotIndex = Math.floor(index / barbers.length);
+    const dayOffset = Math.floor(slotIndex / slotHours.length) + 1;
+    const hour = slotHours[slotIndex % slotHours.length];
+
+    const date = new Date(baseDate);
+    date.setDate(baseDate.getDate() + dayOffset);
+    date.setHours(hour, 0, 0, 0);
+
+    const created = await prisma.time.create({
+      data: {
+        barberId: barber.id,
+        date,
+        disponible: true,
+      },
+    });
+
+    createdTimes.push({ id: created.id, barberId: created.barberId });
+  }
+
+  return createdTimes;
+}
+
+async function seedAppointments(
+  total: number,
+  createdTimes: Array<{ id: string; barberId: string }>
+) {
   const clients = await prisma.client.findMany();
   const services = await prisma.service.findMany();
 
-  if (!barbers.length || !clients.length || !services.length) return;
+  if (!createdTimes.length || !clients.length || !services.length) return;
 
-  const createdTimes: string[] = [];
-  const slotHours = [9, 10, 14, 15, 16];
-
-  for (const barber of barbers) {
-    for (let dayOffset = 1; dayOffset <= 5; dayOffset++) {
-      for (const hour of slotHours) {
-        const date = new Date();
-        date.setDate(date.getDate() + dayOffset);
-        date.setHours(hour, 0, 0, 0);
-
-        const exists = await prisma.time.findFirst({
-          where: {
-            barberId: barber.id,
-            date,
-          },
-        });
-
-        if (!exists) {
-          const created = await prisma.time.create({
-            data: {
-              barberId: barber.id,
-              date,
-              disponible: true,
-            },
-          });
-          createdTimes.push(created.id);
-        }
-      }
-    }
-  }
-
-  const availableTimes = await prisma.time.findMany({
-    where: { disponible: true },
-    orderBy: { date: "asc" },
-  });
-
-  const appointmentsToCreate = Math.min(20, availableTimes.length);
+  const appointmentsToCreate = Math.min(total, createdTimes.length);
   for (let index = 0; index < appointmentsToCreate; index++) {
-    const time = availableTimes[index];
-    const existingAppointment = await prisma.appointment.findFirst({
-      where: { timeId: time.id },
-    });
-
-    if (existingAppointment) continue;
+    const time = createdTimes[index];
 
     const randomClient = randomFrom(clients);
     const randomService = randomFrom(services);
-    const statusPool = [
-      AppointmentStatus.SCHEDULED,
-      AppointmentStatus.COMPLETED,
-      AppointmentStatus.CANCELED,
-    ];
     const status = randomFrom(statusPool);
 
     await prisma.appointment.create({
@@ -234,37 +287,35 @@ async function seedTimesAndAppointments() {
   }
 }
 
-async function seedPayments() {
+async function seedPayments(total: number) {
   const barbers = await prisma.barber.findMany({ include: { Balance: true } });
+  const balances = barbers
+    .map((barber) => barber.Balance)
+    .filter((balance): balance is NonNullable<typeof balance> => Boolean(balance));
 
-  for (const barber of barbers) {
-    if (!barber.Balance) continue;
+  if (!balances.length) return;
 
-    const existingPayments = await prisma.payment.count({
-      where: { balanceId: barber.Balance.id },
+  const totalsByBalance = new Map<string, number>();
+  for (const balance of balances) totalsByBalance.set(balance.id, 0);
+
+  for (let index = 0; index < total; index++) {
+    const balance = balances[index % balances.length];
+    const amount = randomInt(20, 120);
+
+    await prisma.payment.create({
+      data: {
+        balanceId: balance.id,
+        amount,
+      },
     });
 
-    if (existingPayments > 0) continue;
+    totalsByBalance.set(balance.id, (totalsByBalance.get(balance.id) ?? 0) + amount);
+  }
 
-    let total = 0;
-    const quantity = randomInt(1, 3);
-    for (let index = 0; index < quantity; index++) {
-      const amount = randomInt(20, 120);
-      total += amount;
-
-      await prisma.payment.create({
-        data: {
-          balanceId: barber.Balance.id,
-          amount,
-        },
-      });
-    }
-
+  for (const [balanceId, totalAmount] of totalsByBalance.entries()) {
     await prisma.balance.update({
-      where: { id: barber.Balance.id },
-      data: {
-        balance: { increment: total },
-      },
+      where: { id: balanceId },
+      data: { balance: totalAmount },
     });
   }
 }
@@ -272,73 +323,47 @@ async function seedPayments() {
 async function main() {
   const knownUsers: PublicSeedUser[] = [];
 
+  await clearDatabase();
+
   const admin = await upsertUser({
-    name: "Douglas Admin",
-    email: "admin@barbearia.local",
-    password: "Admin@123",
+    name: "Douglas",
+    email: "douglas@barbearia.local",
+    password: "Douglas@123",
     type: UserType.BARBER,
+    telephone: "11999999999",
   });
 
   const barber = await upsertUser({
-    name: "Carlos Barber",
-    email: "barber@barbearia.local",
-    password: "Barber@123",
+    name: "Carlos",
+    email: "carlos@barbearia.local",
+    password: "Carlos@123",
     type: UserType.BARBER,
-  });
-
-  const client = await upsertUser({
-    name: "Lucas Cliente",
-    email: "cliente@barbearia.local",
-    password: "Cliente@123",
-    type: UserType.CLIENT,
-  });
-
-  const clientTwo = await upsertUser({
-    name: "Marina Cliente",
-    email: "cliente2@barbearia.local",
-    password: "Cliente2@123",
-    type: UserType.CLIENT,
+    telephone: "11988888888",
   });
 
   await upsertBarberProfile(admin.id, true);
   await upsertBarberProfile(barber.id, false);
 
-  await upsertClientProfile(client.id, "11999990001");
-  await upsertClientProfile(clientTwo.id, "11999990002");
-
   knownUsers.push(
     {
       role: "ADMIN (barber + isAdmin=true)",
-      email: "admin@barbearia.local",
-      password: "Admin@123",
+      email: "douglas@barbearia.local",
+      password: "Douglas@123",
     },
     {
       role: "BARBER (barber + isAdmin=false)",
-      email: "barber@barbearia.local",
-      password: "Barber@123",
-    },
-    {
-      role: "CLIENT",
-      email: "cliente@barbearia.local",
-      password: "Cliente@123",
-    },
-    {
-      role: "CLIENT",
-      email: "cliente2@barbearia.local",
-      password: "Cliente2@123",
+      email: "carlos@barbearia.local",
+      password: "Carlos@123",
     }
   );
 
-  const randomUsers = await createRandomUsers(10);
+  const randomUsers = await createClientUsers(CLIENT_USERS_TOTAL);
 
-  await ensureService("Corte Tradicional", "Corte masculino tradicional", 35);
-  await ensureService("Barba Completa", "Modelagem e acabamento da barba", 30);
-  await ensureService("Corte + Barba", "Pacote completo", 60);
-  await ensureService("Pigmentacao", "Pigmentacao de barba/cabelo", 45);
-  await ensureService("Sobrancelha", "Ajuste de sobrancelha", 20);
+  await seedServices(MIN_SERVICE_ROWS);
 
-  await seedTimesAndAppointments();
-  await seedPayments();
+  const createdTimes = await seedTimes(MIN_TIME_ROWS);
+  await seedAppointments(MIN_APPOINTMENT_ROWS, createdTimes);
+  await seedPayments(MIN_PAYMENT_ROWS);
 
   const totals = await Promise.all([
     prisma.user.count(),
@@ -354,7 +379,7 @@ async function main() {
   console.log("Seed finalizado com sucesso.");
   console.table(knownUsers);
 
-  console.log("Usuarios aleatorios criados (senhas aleatorias nao exibidas):");
+  console.log("Usuarios clientes criados (senhas aleatorias nao exibidas):");
   console.table(
     randomUsers.map((user) => ({
       role: user.type,
