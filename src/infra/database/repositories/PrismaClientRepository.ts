@@ -12,9 +12,7 @@ export class PrismaClientRepository implements IClientsRepository {
   async update(client: Client): Promise<Client> {
     return await prisma.client.update({
       where: { id: client.id },
-      data: {
-        telephone: client.telephone,
-      },
+      data: {},
     });
   }
 }

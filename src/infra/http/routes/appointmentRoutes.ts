@@ -27,12 +27,12 @@ const barberRepo = new PrismaBarberRepository();
 const paymentRepo = new PrismaPaymentRepository();
 const serviceRepo = new PrismaServiceRepository();
 const balanceRepo = new PrismaBalanceRepository();
-const createAppointment = new CreateAppointment(appointmentRepo, clientRepository, timeRepo);
+const createAppointment = new CreateAppointment(appointmentRepo, clientRepository);
 const createAppointmentController = new CreateAppointmentController(createAppointment);
 const listClientAppointments = new ListClientAppointments(appointmentRepo, clientRepository);
 const listClientAppointmentsController = new ListClientAppointmentsController(listClientAppointments);
 const attendAppointment = new AttendAppointment(appointmentRepo, barberRepo, paymentRepo, serviceRepo, balanceRepo);
-const canceledAppointment = new CanceledAppointment(appointmentRepo, clientRepository);
+const canceledAppointment = new CanceledAppointment(appointmentRepo, clientRepository, timeRepo);
 const attendAppointmentController = new AttendAppointmentController(attendAppointment);
 const canceledAppointmentController = new CanceledAppointmentController(canceledAppointment);
 
