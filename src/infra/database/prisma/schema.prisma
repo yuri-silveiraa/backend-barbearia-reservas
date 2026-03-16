@@ -25,6 +25,10 @@ model User {
   type      UserType
   provider  String?
   providerId String? @unique
+  emailVerified Boolean @default(false)
+  emailCode String?
+  emailCodeExpires DateTime?
+  emailCodeCooldownExpires DateTime?
   createdAt DateTime @default(now())
   barber    Barber? @relation("UserBarber")
   client    Client?  @relation("UserClient")
@@ -72,6 +76,7 @@ model Service {
   name        String
   description String?
   price       Float
+  active      Boolean  @default(true)
   appointments Appointment[]
 }
 

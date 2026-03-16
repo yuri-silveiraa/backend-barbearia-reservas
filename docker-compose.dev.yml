@@ -31,12 +31,19 @@ services:
       PORT: 3000
       JWT_SECRET: supersecretkey
       DATABASE_URL: postgres://postgres:yuri1234@postgres:5432/barbearia
+      SMTP_HOST: smtp-relay.brevo.com
+      SMTP_PORT: 587
+      SMTP_USER: a51e92001@smtp-brevo.com
+      SMTP_PASS: W1JDLKjbNP4aQtm
+      SMTP_FROM: yuri.silveira.dev@gmail.com
+      BREVO_SENDER_EMAIL: yuri.silveira.dev@gmail.com
+      BREVO_SENDER_NAME: Douglas Barbearia
     ports:
       - "3000:3000"
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npx prisma migrate deploy && npm run db:seed && npm run dev"
+    command: sh -c "npx prisma migrate deploy && npm run dev"
 
 volumes:
   barbearia-dev:

@@ -4,6 +4,7 @@ import { User } from '../../../../core/entities/User';
 import { sign } from 'jsonwebtoken';
 import { env } from '../../../../config/env';
 import { getAuthCookieOptions } from '../../helpers/authCookie';
+import { prisma } from '../../../database/prisma/prismaClient';
 
 export class LoginUserController {
   constructor(private authenticateUser: AuthenticateUser) {}
@@ -18,7 +19,17 @@ export class LoginUserController {
 
     res.cookie('token', token, getAuthCookieOptions(req));
 
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: { barber: true }
+    });
+
     const { password, ...userWithoutPassword } = user as User & { password: string };
-    return res.status(200).json({ user: userWithoutPassword });
+    const responseUser = {
+      ...userWithoutPassword,
+      isAdmin: fullUser?.barber?.isAdmin ?? false
+    };
+    
+    return res.status(200).json({ user: responseUser });
   }
 }

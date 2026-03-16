@@ -5,11 +5,15 @@ export class RegisterUserController {
   constructor(private createUser: CreateUser) {}
 
   async handle(req: Request, res: Response) {
-    const user = await this.createUser.execute(req.body);
+    const { user, code } = await this.createUser.execute(req.body);
     const data = {
       name: user.name,
-      email: user.email
+      email: user.email,
+      emailVerified: user.emailVerified,
     }
+    
+    console.log(`[DEV] Código de verificação: ${code}`);
+    
     return res.status(201).send(data);
   }
 }

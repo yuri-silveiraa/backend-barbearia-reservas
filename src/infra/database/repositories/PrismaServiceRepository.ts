@@ -22,14 +22,29 @@ export class PrismaServiceRepository implements IServiceRepository {
   }
 
   async findAll(): Promise<Service[]> {
-    const services = await prisma.service.findMany();
+    const services = await prisma.service.findMany({
+      where: { active: true },
+    });
     return services;
   }
 
   async deleteById(id: string): Promise<void> {
-    await prisma.service.delete({
+    await prisma.service.update({
       where: { id },
+      data: { active: false },
     });
+  }
+
+  async update(id: string, data: Partial<Service>): Promise<Service> {
+    const service = await prisma.service.update({
+      where: { id },
+      data: {
+        ...(data.name && { name: data.name }),
+        ...(data.price !== undefined && { price: data.price }),
+        ...(data.description !== undefined && { description: data.description }),
+      },
+    });
+    return service;
   }
   
 }

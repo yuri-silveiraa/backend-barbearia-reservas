@@ -1,5 +1,6 @@
 import { AuthenticateDTO } from "../dtos/AuthenticateDTO";
 import { User } from "../entities/User";
+import { EmailNotVerifiedError } from "../errors/EmailNotVerifiedError";
 import { InvalidCredentialsError } from "../errors/InvalidCredentialsError";
 import { IUserRepository } from "../repositories/IUserRepository";
 import  bcrypt  from "bcrypt";
@@ -18,6 +19,10 @@ export class AuthenticateUser {
     const passwordMatch = await bcrypt.compare(req.password, user.password);
     if (!passwordMatch) {
       throw new InvalidCredentialsError();
+    }
+
+    if (!user.emailVerified) {
+      throw new EmailNotVerifiedError();
     }
 
     return user;

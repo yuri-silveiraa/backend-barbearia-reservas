@@ -1,5 +1,6 @@
 import { User } from "../entities/User";
 import { IUserRepository } from "../repositories/IUserRepository";
+import { prisma } from "../../infra/database/prisma/prismaClient";
 
 export interface GoogleUserPayload {
   sub: string;
@@ -17,14 +18,27 @@ export class AuthenticateWithGoogle {
     let user = await this.usersRepository.findByProviderId(payload.sub);
 
     if (!user) {
-      user = await this.usersRepository.create({
-        name: payload.name,
-        email: payload.email,
-        password: null,
-        type: "CLIENT",
-        provider: "google",
-        providerId: payload.sub,
-      });
+      const existingUser = await this.usersRepository.findByEmail(payload.email);
+
+      if (existingUser) {
+        user = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            provider: "google",
+            providerId: payload.sub,
+          }
+        });
+      } else {
+        user = await this.usersRepository.create({
+          name: payload.name,
+          email: payload.email,
+          password: null,
+          type: "CLIENT",
+          provider: "google",
+          providerId: payload.sub,
+          telephone: "",
+        });
+      }
     }
 
     return user;

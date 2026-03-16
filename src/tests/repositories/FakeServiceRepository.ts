@@ -27,4 +27,19 @@ export class FakeServiceRepository implements IServiceRepository {
   async findAll(): Promise<Service[]> {
     return this.services;
   }
+
+  async update(id: string, data: Partial<Service>): Promise<Service> {
+    const index = this.services.findIndex(s => s.id === id);
+    if (index === -1) {
+      throw new Error("Serviço não encontrado");
+    }
+    const service = this.services[index];
+    const updated: Service = {
+      ...service,
+      ...data,
+      id: service.id,
+    };
+    this.services[index] = updated;
+    return updated;
+  }
 }

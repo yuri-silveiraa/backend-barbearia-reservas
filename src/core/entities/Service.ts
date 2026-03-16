@@ -4,5 +4,7 @@ export class Service {
     public name: string,
     public price: number,
     public description?: string,
+    public duration?: number,
+    public category?: string,
   ) {}
 }

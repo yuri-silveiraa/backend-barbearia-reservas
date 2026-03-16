@@ -13,6 +13,18 @@ import { AuthenticatedRequest } from "../helpers/requestInterface";
 import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
 import { getAuthCookieClearOptions } from "../helpers/authCookie";
 import { GoogleAuthController } from "../controllers/users/GoogleAuthController";
+import { VerifyEmailController } from "../controllers/users/VerifyEmailController";
+import { VerifyEmail } from "../../../core/use-cases/VerifyEmail";
+import { ResendEmailCodeController } from "../controllers/users/ResendEmailCodeController";
+import { ResendEmailCode } from "../../../core/use-cases/ResendEmailCode";
+import { UpdateUser } from "../../../core/use-cases/UpdateUser";
+import { UpdateUserController } from "../controllers/users/UpdateUserController";
+import { UpdateUserSchema } from "../schemas/input/UpdateUser.schema";
+import { DeleteMeUser } from "../../../core/use-cases/DeleteMeUser";
+import { DeleteMeUserController } from "../controllers/users/DeleteMeUserController";
+import { PrismaClientRepository } from "../../database/repositories/PrismaClientRepository";
+import { PrismaAppointmentRepository } from "../../database/repositories/PrismaAppointmentRepository";
+import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
 
 const userRoutes = Router();
 
@@ -28,6 +40,22 @@ const getMeUser = new GetMeUser(userRepo);
 const getMeUserController = new GetMeUserController(getMeUser);
 
 const googleAuthController = new GoogleAuthController();
+
+const verifyEmail = new VerifyEmail(userRepo);
+const verifyEmailController = new VerifyEmailController(verifyEmail);
+
+const resendEmailCode = new ResendEmailCode(userRepo);
+const resendEmailCodeController = new ResendEmailCodeController(resendEmailCode);
+
+const updateUser = new UpdateUser(userRepo);
+const updateUserController = new UpdateUserController(updateUser);
+
+const clientRepo = new PrismaClientRepository();
+const appointmentRepo = new PrismaAppointmentRepository();
+const timeRepo = new PrismaTimeRepository();
+
+const deleteMeUser = new DeleteMeUser(userRepo, clientRepo, appointmentRepo, timeRepo);
+const deleteMeUserController = new DeleteMeUserController(deleteMeUser);
 
 userRoutes.post(
   "/create",
@@ -55,6 +83,29 @@ userRoutes.get(
   "/me", 
   ensureAuthenticated,
   (req, res) => getMeUserController.handle(req as AuthenticatedRequest, res)
+);
+
+userRoutes.patch(
+  "/me",
+  ensureAuthenticated,
+  validate(UpdateUserSchema),
+  (req, res) => updateUserController.handle(req as AuthenticatedRequest, res)
+);
+
+userRoutes.delete(
+  "/me",
+  ensureAuthenticated,
+  (req, res) => deleteMeUserController.handle(req as AuthenticatedRequest, res)
+);
+
+userRoutes.post(
+  "/verify-email",
+  (req, res) => verifyEmailController.handle(req, res)
+);
+
+userRoutes.post(
+  "/resend-code",
+  (req, res) => resendEmailCodeController.handle(req, res)
 );
 
 export { userRoutes };

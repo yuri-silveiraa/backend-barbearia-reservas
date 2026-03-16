@@ -12,6 +12,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerFile from "./swagger-output.json";
 import { env } from './config/env';
 import { csrfMiddleware, generateCsrfToken } from './infra/http/helpers/csrf';
+import { prisma } from './infra/database/prisma/prismaClient';
 
 const app = express();
 const port = env.port;
@@ -20,7 +21,7 @@ app.set("trust proxy", 1);
 
 app.use(cors({
   origin: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "x-csrf-token"],
   credentials: true
 }));
@@ -47,3 +48,26 @@ app.use(errorHandler);
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
+
+async function cleanupUnverifiedUsers() {
+  const cutoff = new Date();
+  cutoff.setHours(cutoff.getHours() - 24);
+
+  try {
+    const result = await prisma.user.deleteMany({
+      where: {
+        emailVerified: false,
+        provider: null,
+        createdAt: { lt: cutoff },
+      },
+    });
+    if (result.count > 0) {
+      console.log(`Removed ${result.count} unverified users`);
+    }
+  } catch (error) {
+    console.error("Failed to cleanup unverified users", error);
+  }
+}
+
+cleanupUnverifiedUsers();
+setInterval(cleanupUnverifiedUsers, 6 * 60 * 60 * 1000);

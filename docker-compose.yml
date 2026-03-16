@@ -33,7 +33,7 @@ services:
       DATABASE_URL: postgres://postgres:yuri1234@postgres:5432/barbearia
     ports:
       - "3000:3000"
-    command: sh -c "npx prisma migrate deploy && node dist/index.js"
+    command: sh -c "npx prisma db push --accept-data-loss && node dist/index.js"
 
 volumes:
   barbearia-api:

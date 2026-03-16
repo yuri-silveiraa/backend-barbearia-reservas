@@ -34,8 +34,45 @@ export class FakeUsersRepository implements IUserRepository {
     return user || null;
   }
 
+  async update(
+    id: string,
+    data: Partial<Pick<User, "name" | "email" | "telephone" | "password" | "provider" | "providerId" | "emailVerified" | "emailCode" | "emailCodeExpires" | "emailCodeCooldownExpires">>
+  ): Promise<User> {
+    const userIndex = this.users.findIndex(u => u.id === id);
+    if (userIndex === -1) {
+      throw new Error("Usuário não encontrado");
+    }
+    const updated = { ...this.users[userIndex], ...data };
+    this.users[userIndex] = updated;
+    return updated;
+  }
+
   async findByProviderId(providerId: string): Promise<User | null> {
     const user = this.users.find(u => u.providerId === providerId);
+    return user || null;
+  }
+
+  async updateEmailVerification(id: string, verified: boolean): Promise<void> {
+    const user = this.users.find(u => u.id === id);
+    if (user) {
+      user.emailVerified = verified;
+      user.emailCode = null;
+      user.emailCodeExpires = null;
+      user.emailCodeCooldownExpires = null;
+    }
+  }
+
+  async setEmailCode(id: string, code: string, expiresAt: Date, cooldownExpiresAt: Date): Promise<void> {
+    const user = this.users.find(u => u.id === id);
+    if (user) {
+      user.emailCode = code;
+      user.emailCodeExpires = expiresAt;
+      user.emailCodeCooldownExpires = cooldownExpiresAt;
+    }
+  }
+
+  async findByEmailCode(code: string): Promise<User | null> {
+    const user = this.users.find(u => u.emailCode === code && u.emailCodeExpires && u.emailCodeExpires > new Date());
     return user || null;
   }
 }

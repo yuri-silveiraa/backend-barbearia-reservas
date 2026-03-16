@@ -19,7 +19,7 @@ type PublicSeedUser = {
 };
 
 const CLIENT_USERS_TOTAL = 30;
-const MIN_SERVICE_ROWS = 300;
+const MIN_SERVICE_ROWS = 20;
 const MIN_TIME_ROWS = 300;
 const MIN_APPOINTMENT_ROWS = 300;
 const MIN_PAYMENT_ROWS = 300;
@@ -144,6 +144,7 @@ async function ensureService(name: string, description: string, price: number) {
       name,
       description,
       price,
+      active: true,
     },
   });
 }
@@ -215,6 +216,7 @@ async function seedServices(total: number) {
         name: `Servico ${serviceNumber}`,
         description: `Servico adicional ${serviceNumber} para simular volume real`,
         price: randomInt(45, 250),
+        active: true,
       },
     });
   }

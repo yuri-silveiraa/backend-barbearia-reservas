@@ -10,6 +10,7 @@ export class ListService {
       name: s.name,
       price: s.price,
       description: s.description ?? "Sem descrição",
+      active: s.active ?? true,
     }));
   }
 }
