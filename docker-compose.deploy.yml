@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: db-barbearia
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: barbearia
+    volumes:
+      - barbearia-db:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-barbearia
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/barbearia
+    networks:
+      - internal
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.barbearia-api.rule=Host(`api.yuri-pires-dev.tech`)"
+      - "traefik.http.routers.barbearia-api.entrypoints=websecure"
+      - "traefik.http.routers.barbearia-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.barbearia-api.loadbalancer.server.port=3000"
+
+  frontend:
+    build:
+      context: ../barbearia-front
+      dockerfile: Dockerfile.prod
+    container_name: front-barbearia
+    restart: unless-stopped
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.barbearia-front.rule=Host(`app.yuri-pires-dev.tech`)"
+      - "traefik.http.routers.barbearia-front.entrypoints=websecure"
+      - "traefik.http.routers.barbearia-front.tls.certresolver=letsencrypt"
+      - "traefik.http.services.barbearia-front.loadbalancer.server.port=80"
+
+volumes:
+  barbearia-db:
+
+networks:
+  internal:
+  web:
+    external: true
