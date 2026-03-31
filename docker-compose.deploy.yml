@@ -9,6 +9,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: barbearia
+    ports:
+      - "5432:5432"
     volumes:
       - barbearia-db:/var/lib/postgresql/data
     networks:
