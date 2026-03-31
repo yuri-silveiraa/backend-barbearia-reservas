@@ -29,6 +29,22 @@ export class GenerateTimeSlots {
     return this.parseTime(time) + minutesToAdd;
   }
 
+  private getIntervalWindow(config: GenerateTimeSlotsDTO): { start: number; end: number } | null {
+    if (!config.intervalStart) {
+      return null;
+    }
+
+    const duration = Number(config.intervalDuration);
+    if (!Number.isFinite(duration) || duration <= 0) {
+      return null;
+    }
+
+    const startMinutes = this.parseTime(config.intervalStart);
+    const endMinutes = this.addMinutesToTime(config.intervalStart, duration);
+
+    return { start: startMinutes, end: endMinutes };
+  }
+
   private getDaysInRange(startDate: string, endDate: string, excludeDays: number[]): Date[] {
     const days: Date[] = [];
     const start = new Date(startDate);
@@ -95,22 +111,20 @@ export class GenerateTimeSlots {
       };
     }
 
-    if (config.intervalStart && config.intervalDuration) {
-      const intervalStartMinutes = this.parseTime(config.intervalStart);
-      const intervalEndMinutes = this.addMinutesToTime(config.intervalStart, config.intervalDuration);
-
-      if (intervalStartMinutes < startMinutes || intervalEndMinutes > endMinutes) {
+    const intervalWindow = this.getIntervalWindow(config);
+    if (intervalWindow) {
+      if (intervalWindow.start < startMinutes || intervalWindow.end > endMinutes) {
         return {
           isValid: false,
           error: "Horário de intervalo está fora do período de trabalho",
         };
       }
 
-      if (intervalStartMinutes < endMinutes && intervalEndMinutes > startMinutes) {
-        const intervalOverlaps = intervalStartMinutes < endMinutes && intervalEndMinutes > startMinutes;
+      if (intervalWindow.start < endMinutes && intervalWindow.end > startMinutes) {
+        const intervalOverlaps = intervalWindow.start < endMinutes && intervalWindow.end > startMinutes;
         if (intervalOverlaps) {
-          if (config.blockDuration > intervalStartMinutes - startMinutes && 
-              config.blockDuration > endMinutes - intervalEndMinutes) {
+          if (config.blockDuration > intervalWindow.start - startMinutes && 
+              config.blockDuration > endMinutes - intervalWindow.end) {
             return {
               isValid: false,
               error: "Duração do bloco não permite criar horários fora do intervalo de almoço",
@@ -139,18 +153,17 @@ export class GenerateTimeSlots {
 
     let currentTime = this.parseTime(periodStart);
     const endTime = this.parseTime(periodEnd);
+    const intervalWindow = this.getIntervalWindow(config);
 
     while (currentTime + config.blockDuration <= endTime) {
       const blockStart = this.formatTime(currentTime);
       const blockEnd = this.formatTime(currentTime + config.blockDuration);
 
-      if (config.intervalStart && config.intervalDuration) {
-        const intervalStartMinutes = this.parseTime(config.intervalStart);
-        const intervalEndMinutes = this.addMinutesToTime(config.intervalStart, config.intervalDuration);
+      if (intervalWindow) {
         const blockEndMinutes = currentTime + config.blockDuration;
 
         const overlapsInterval = 
-          currentTime < intervalEndMinutes && blockEndMinutes > intervalStartMinutes;
+          currentTime < intervalWindow.end && blockEndMinutes > intervalWindow.start;
 
         if (!overlapsInterval) {
           blocks.push({ start: blockStart, end: blockEnd });
