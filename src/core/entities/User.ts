@@ -1,3 +1,6 @@
+import { Barber } from "./Barber";
+import { Client } from "./Client";
+
 export type UserType = "BARBER" | "CLIENT";
 
 export class User {
@@ -13,6 +16,9 @@ export class User {
     public emailVerified: boolean = false,
     public emailCode?: string | null,
     public emailCodeExpires?: Date | null,
-    public readonly createdAt: Date = new Date()
+    public emailCodeCooldownExpires?: Date | null,
+    public readonly createdAt: Date = new Date(),
+    public barber?: Barber | null,
+    public client?: Client | null
   ) {}
 }
