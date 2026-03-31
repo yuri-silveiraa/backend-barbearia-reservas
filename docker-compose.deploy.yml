@@ -40,7 +40,7 @@ services:
 
   frontend:
     build:
-      context: ../barbearia-front
+      context: ../front-barbearia
       dockerfile: Dockerfile.prod
     container_name: front-barbearia
     restart: unless-stopped
