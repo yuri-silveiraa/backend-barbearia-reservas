@@ -19,6 +19,11 @@ export class GenerateTimeSlots {
     return hours * 60 + minutes;
   }
 
+  private parseDateOnly(date: string): Date {
+    const [year, month, day] = date.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
   private formatTime(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -47,8 +52,8 @@ export class GenerateTimeSlots {
 
   private getDaysInRange(startDate: string, endDate: string, excludeDays: number[]): Date[] {
     const days: Date[] = [];
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = this.parseDateOnly(startDate);
+    const end = this.parseDateOnly(endDate);
     end.setHours(23, 59, 59, 999);
 
     const current = new Date(start);
@@ -189,8 +194,8 @@ export class GenerateTimeSlots {
       throw new Error("Barbeiro não encontrado");
     }
 
-    const startDate = new Date(config.startDate);
-    const endDate = new Date(config.endDate);
+    const startDate = this.parseDateOnly(config.startDate);
+    const endDate = this.parseDateOnly(config.endDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
