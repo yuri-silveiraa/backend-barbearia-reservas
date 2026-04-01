@@ -1,4 +1,4 @@
-import { Service } from "@prisma/client";
+import { Service } from "../entities/Service";
 import { IServiceRepository } from "../repositories/IServiceRepository";
 
 export class ListService {
@@ -10,6 +10,7 @@ export class ListService {
       name: s.name,
       price: s.price,
       description: s.description ?? "Sem descrição",
+      active: s.active ?? true,
     }));
   }
 }

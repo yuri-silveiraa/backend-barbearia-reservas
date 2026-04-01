@@ -6,5 +6,6 @@ export class Service {
     public description?: string,
     public duration?: number,
     public category?: string,
+    public active?: boolean,
   ) {}
 }

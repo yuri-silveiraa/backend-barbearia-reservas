@@ -10,6 +10,7 @@ export class FakeServiceRepository implements IServiceRepository {
       name: data.name,
       description: data.description,
       price: data.price,
+      active: data.active ?? true,
     };
     this.services.push(service);
     return service;
