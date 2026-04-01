@@ -6,6 +6,7 @@ export interface IAppointmentsRepository {
   findByClientId(id: string): Promise<AppointmentDTO[] | null>;
   findById(id: string): Promise<AppointmentDTO | null>;
   findByBarberIdToday(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]>;
+  findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]>;
   countByClientSince(clientId: string, since: Date): Promise<number>;
   countCompletedByBarberToday(barberId: string, date: Date): Promise<number>;
   attend(id: string): Promise<boolean>;

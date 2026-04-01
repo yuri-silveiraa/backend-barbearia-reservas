@@ -6,6 +6,8 @@ import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
 import { ensureBarber, ensureAdmin } from "../middlewares/ensureRole";
 import { ListBarberTodayAppointments } from "../../../core/use-cases/ListBarberTodayAppointments";
 import { ListBarberTodayAppointmentsController } from "../controllers/barber/ListBarberTodayAppointmentsController";
+import { ListBarberAppointmentsByRange } from "../../../core/use-cases/ListBarberAppointmentsByRange";
+import { ListBarberAppointmentsByRangeController } from "../controllers/barber/ListBarberAppointmentsByRangeController";
 import { GetBarberDailyStats } from "../../../core/use-cases/GetBarberDailyStats";
 import { GetBarberDailyStatsController } from "../controllers/barber/GetBarberDailyStatsController";
 import { PrismaAppointmentRepository } from "../../database/repositories/PrismaAppointmentRepository";
@@ -29,6 +31,9 @@ const listBarberController = new ListBarberController(listBarber);
 const listBarberTodayAppointments = new ListBarberTodayAppointments(appointmentRepo, barberRepo);
 const listBarberTodayAppointmentsController = new ListBarberTodayAppointmentsController(listBarberTodayAppointments);
 
+const listBarberAppointmentsByRange = new ListBarberAppointmentsByRange(appointmentRepo, barberRepo);
+const listBarberAppointmentsByRangeController = new ListBarberAppointmentsByRangeController(listBarberAppointmentsByRange);
+
 const getBarberDailyStats = new GetBarberDailyStats(appointmentRepo, barberRepo, balanceRepo);
 const getBarberDailyStatsController = new GetBarberDailyStatsController(getBarberDailyStats);
 
@@ -45,6 +50,12 @@ barberRoutes.get(
   "/today-appointments",
   ensureBarber,
   (req, res) => listBarberTodayAppointmentsController.handle(req as AuthenticatedRequest, res)
+);
+
+barberRoutes.get(
+  "/appointments",
+  ensureBarber,
+  (req, res) => listBarberAppointmentsByRangeController.handle(req as AuthenticatedRequest, res)
 );
 
 barberRoutes.get(

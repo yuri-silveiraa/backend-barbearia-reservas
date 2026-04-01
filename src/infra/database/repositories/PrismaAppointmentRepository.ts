@@ -161,6 +161,58 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     }));
   }
 
+  async findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]> {
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        barberId,
+        time: {
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        clientId: true,
+        barberId: true,
+        serviceId: true,
+        timeId: true,
+        client: {
+          select: { user: { select: { name: true } } }
+        },
+        barber: {
+          select: { user: { select: { name: true } } }
+        },
+        service: {
+          select: { name: true }
+        },
+        time: {
+          select: { date: true }
+        },
+      },
+      orderBy: {
+        time: {
+          date: 'asc',
+        },
+      },
+    });
+
+    return appointments.map((a) => ({
+      id: a.id,
+      clientId: a.clientId,
+      barberId: a.barberId,
+      serviceId: a.serviceId,
+      client: a.client.user.name,
+      barber: a.barber.user.name,
+      service: a.service.name,
+      timeId: a.timeId,
+      time: a.time.date,
+      status: a.status
+    }));
+  }
+
   async countCompletedByBarberToday(barberId: string, date: Date): Promise<number> {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
