@@ -18,6 +18,7 @@ import { PrismaBalanceRepository } from "../../database/repositories/PrismaBalan
 import { PrismaPaymentRepository } from "../../database/repositories/PrismaPaymentRepository";
 import { CanceledAppointment } from "../../../core/use-cases/CanceledAppointment";
 import { CanceledAppointmentController } from "../controllers/appointments/CanceledAppointmentController";
+import { appointmentRateLimiter } from "../middlewares/rateLimit";
 
 const appointmentRoute = Router();
 const appointmentRepo = new PrismaAppointmentRepository();
@@ -27,7 +28,7 @@ const barberRepo = new PrismaBarberRepository();
 const paymentRepo = new PrismaPaymentRepository();
 const serviceRepo = new PrismaServiceRepository();
 const balanceRepo = new PrismaBalanceRepository();
-const createAppointment = new CreateAppointment(appointmentRepo, clientRepository);
+const createAppointment = new CreateAppointment(appointmentRepo, clientRepository, timeRepo);
 const createAppointmentController = new CreateAppointmentController(createAppointment);
 const listClientAppointments = new ListClientAppointments(appointmentRepo, clientRepository);
 const listClientAppointmentsController = new ListClientAppointmentsController(listClientAppointments);
@@ -40,6 +41,7 @@ appointmentRoute.use(ensureAuthenticated);
 
 appointmentRoute.post(
   "/create",
+  appointmentRateLimiter,
   validate(CreateAppointmentSchema),
   (req, res) => createAppointmentController.handle(req as AuthenticatedRequest, res)
 );

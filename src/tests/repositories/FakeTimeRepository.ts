@@ -27,6 +27,11 @@ export class FakeTimeRepository implements ITimeRepository {
     return times.length > 0 ? times : null;
   }
 
+  async findById(timeId: string): Promise<Time | null> {
+    const time = this.times.find(t => t.id === timeId);
+    return time || null;
+  }
+
   async updateDisponible(timeId: string, disponible: boolean): Promise<void> {
     const time = this.times.find(t => t.id === timeId);
     if (time) {

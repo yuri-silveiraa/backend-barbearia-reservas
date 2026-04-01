@@ -1,12 +1,14 @@
 import { CreateAppointment } from "./CreateAppointment";
 import { FakeAppointmentRepository } from "../../tests/repositories/FakeAppointmentRepository";
 import { FakeClientRepository } from "../../tests/repositories/FakeClientRepository";
-import { ClientScheduleLimitError } from "../errors/ClientScheduleLimitError";
+import { ClientScheduleSpacingError } from "../errors/ClientScheduleSpacingError";
+import { FakeTimeRepository } from "../../tests/repositories/FakeTimeRepository";
 
 describe("CreateAppointment", () => {
   const appointmentRepository = new FakeAppointmentRepository();
   const clientRepository = new FakeClientRepository();
-  const sut = new CreateAppointment(appointmentRepository, clientRepository);
+  const timeRepository = new FakeTimeRepository();
+  const sut = new CreateAppointment(appointmentRepository, clientRepository, timeRepository);
 
   it("deve criar um agendamento com sucesso", async () => {
     await clientRepository.create({
@@ -17,8 +19,14 @@ describe("CreateAppointment", () => {
       clientId: "user-client-1",
       barberId: "barber-1",
       serviceId: "service-1",
-      timeId: "1",
+      timeId: "",
     };
+
+    const time = await timeRepository.create({
+      barberId: data.barberId,
+      date: new Date("2026-04-10T10:00:00.000Z"),
+    });
+    data.timeId = time.id;
 
     const appointment = await sut.execute(data);
 
@@ -29,25 +37,56 @@ describe("CreateAppointment", () => {
     expect(appointment.status).toBe("SCHEDULED");
   });
 
-  it("deve lançar erro se o cliente tiver mais de 1 agendamento na semana", async () => {
+  it("deve permitir agendamentos com pelo menos 7 dias de diferença", async () => {
     await clientRepository.create({
       userId: "user-client-2",
     });
 
-    const data = {
+    const baseData = {
       clientId: "user-client-2",
       barberId: "barber-1",
       serviceId: "service-1",
-      timeId: "2",
+      timeId: "",
     };
 
-    await sut.execute(data);
+    const firstTime = await timeRepository.create({
+      barberId: baseData.barberId,
+      date: new Date("2026-04-01T10:00:00.000Z"),
+    });
+    await sut.execute({ ...baseData, timeId: firstTime.id });
 
-    await expect(sut.execute({
-      clientId: "user-client-2",
+    const secondTime = await timeRepository.create({
+      barberId: baseData.barberId,
+      date: new Date("2026-04-08T10:00:00.000Z"),
+    });
+    const created = await sut.execute({ ...baseData, timeId: secondTime.id });
+    expect(created).toHaveProperty("id");
+  });
+
+  it("deve bloquear agendamentos com menos de 7 dias de diferença", async () => {
+    await clientRepository.create({
+      userId: "user-client-3",
+    });
+
+    const baseData = {
+      clientId: "user-client-3",
       barberId: "barber-1",
       serviceId: "service-1",
-      timeId: "3",
-    })).rejects.toThrow(ClientScheduleLimitError);
+      timeId: "",
+    };
+
+    const firstTime = await timeRepository.create({
+      barberId: baseData.barberId,
+      date: new Date("2026-04-01T10:00:00.000Z"),
+    });
+    await sut.execute({ ...baseData, timeId: firstTime.id });
+
+    const secondTime = await timeRepository.create({
+      barberId: baseData.barberId,
+      date: new Date("2026-04-06T10:00:00.000Z"),
+    });
+    await expect(
+      sut.execute({ ...baseData, timeId: secondTime.id })
+    ).rejects.toThrow(ClientScheduleSpacingError);
   });
 });

@@ -51,6 +51,13 @@ export class PrismaTimeRepository implements ITimeRepository {
     return times;
   }
 
+  async findById(timeId: string): Promise<Time | null> {
+    const time = await prisma.time.findUnique({
+      where: { id: timeId },
+    });
+    return time;
+  }
+
   async updateDisponible(timeId: string, disponible: boolean): Promise<void> {
     await prisma.time.update({
       where: { id: timeId },
