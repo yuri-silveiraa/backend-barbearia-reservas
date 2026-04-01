@@ -33,7 +33,7 @@ const createAppointmentController = new CreateAppointmentController(createAppoin
 const listClientAppointments = new ListClientAppointments(appointmentRepo, clientRepository);
 const listClientAppointmentsController = new ListClientAppointmentsController(listClientAppointments);
 const attendAppointment = new AttendAppointment(appointmentRepo, barberRepo, paymentRepo, serviceRepo, balanceRepo);
-const canceledAppointment = new CanceledAppointment(appointmentRepo, clientRepository, timeRepo);
+const canceledAppointment = new CanceledAppointment(appointmentRepo, clientRepository, timeRepo, barberRepo);
 const attendAppointmentController = new AttendAppointmentController(attendAppointment);
 const canceledAppointmentController = new CanceledAppointmentController(canceledAppointment);
 

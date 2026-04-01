@@ -45,6 +45,8 @@ services:
     build:
       context: ../front-barbearia
       dockerfile: Dockerfile.prod
+      args:
+        VITE_BASE_URL_API: https://api.yuri-pires-dev.tech
     container_name: front-barbearia
     restart: unless-stopped
     networks:

@@ -2,6 +2,7 @@ import { AppError } from "../errors/AppError";
 import { NoAuthorizationError } from "../errors/NoAuthorizationError";
 import { IAppointmentsRepository } from "../repositories/IAppointmentRepository";
 import { IClientsRepository } from "../repositories/IClientRepository";
+import { IBarbersRepository } from "../repositories/IBarberRepository";
 import { ITimeRepository } from "../repositories/ITimeRepository";
 
 export class CanceledAppointment {
@@ -9,21 +10,25 @@ export class CanceledAppointment {
     private appointmentRepository: IAppointmentsRepository,
     private clientRepository: IClientsRepository,
     private timeRepository: ITimeRepository,
+    private barberRepository: IBarbersRepository,
   ) {}
 
   async execute(clientId: string, appointmentId: string): Promise<void | Error> {
-    const client = await this.clientRepository.findByUserId(clientId);
-    if (!client) {
-      throw new NoAuthorizationError();
-    }
-
     const appointment = await this.appointmentRepository.findById(appointmentId);
     if (!appointment) {
       throw new AppError("Agendamento não encontrado", 404);
     }
 
-    if (appointment.clientId !== client.id) {
-      throw new NoAuthorizationError();
+    const client = await this.clientRepository.findByUserId(clientId);
+    if (client) {
+      if (appointment.clientId !== client.id) {
+        throw new NoAuthorizationError();
+      }
+    } else {
+      const barber = await this.barberRepository.findByUserId(clientId);
+      if (!barber || appointment.barberId !== barber.id) {
+        throw new NoAuthorizationError();
+      }
     }
 
     if (appointment.status === "COMPLETED") {

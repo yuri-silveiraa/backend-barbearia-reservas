@@ -1,14 +1,16 @@
 import { CanceledAppointment } from "./CanceledAppointment";
 import { FakeAppointmentRepository } from "../../tests/repositories/FakeAppointmentRepository";
 import { FakeClientRepository } from "../../tests/repositories/FakeClientRepository";
+import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
 import { FakeTimeRepository } from "../../tests/repositories/FakeTimeRepository";
 import { NoAuthorizationError } from "../errors/NoAuthorizationError";
 
 describe("CanceledAppointment", () => {
   const appointmentRepository = new FakeAppointmentRepository();
   const clientRepository = new FakeClientRepository();
+  const barberRepository = new FakeBarberRepository();
   const timeRepository = new FakeTimeRepository();
-  const sut = new CanceledAppointment(appointmentRepository, clientRepository, timeRepository);
+  const sut = new CanceledAppointment(appointmentRepository, clientRepository, timeRepository, barberRepository);
 
   it("deve lançar erro se o cliente não for o dono do agendamento", async () => {
     const client = await clientRepository.create({
@@ -52,6 +54,33 @@ describe("CanceledAppointment", () => {
 
     const canceled = await appointmentRepository.findById(appointment.id);
     const availableTimes = await timeRepository.findByBarberId("barber-1");
+    expect(canceled?.status).toBe("CANCELED");
+    expect(availableTimes?.some((availableTime) => availableTime.id === time.id)).toBe(true);
+  });
+
+  it("deve permitir barbeiro cancelar agendamento do próprio barbeiro", async () => {
+    const barber = await barberRepository.create({
+      userId: "barber-user-1",
+      isAdmin: false,
+    });
+
+    const time = await timeRepository.create({
+      barberId: barber.id,
+      date: new Date(Date.now() + 60 * 60 * 1000),
+    });
+    await timeRepository.updateDisponible(time.id, false);
+
+    const appointment = await appointmentRepository.create({
+      barberId: barber.id,
+      clientId: "client-1",
+      serviceId: "service-1",
+      timeId: time.id,
+    });
+
+    await sut.execute("barber-user-1", appointment.id);
+
+    const canceled = await appointmentRepository.findById(appointment.id);
+    const availableTimes = await timeRepository.findByBarberId(barber.id);
     expect(canceled?.status).toBe("CANCELED");
     expect(availableTimes?.some((availableTime) => availableTime.id === time.id)).toBe(true);
   });
