@@ -1,4 +1,4 @@
-import { DeleteTimeSlot } from "../../../core/use-cases/DeleteTimeSlot";
+import { DeleteTimeSlot } from "./DeleteTimeSlot";
 import { FakeTimeRepository } from "../../tests/repositories/FakeTimeRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
 
@@ -7,26 +7,29 @@ describe("DeleteTimeSlot", () => {
   const barberRepository = new FakeBarberRepository();
   const sut = new DeleteTimeSlot(timeRepository, barberRepository);
 
+  let barberId = "";
+
   beforeEach(async () => {
     const barber = await barberRepository.create({
       userId: "barbeiro-user-1",
       isAdmin: false,
     });
+    barberId = barber.id;
 
     await timeRepository.create({
       barberId: barber.id,
-      date: new Date("2026-03-10T08:00:00"),
+      date: new Date("2026-04-10T08:00:00"),
     });
   });
 
   it("deve deletar o horário", async () => {
-    const timeSlots = await timeRepository.findByBarberId("barber-1");
+    const timeSlots = await timeRepository.findByBarberId(barberId);
     const timeSlotId = timeSlots![0].id;
 
     await sut.execute("barbeiro-user-1", timeSlotId);
 
-    const result = await timeRepository.findByBarberId("barber-1");
-    expect(result).toHaveLength(0);
+    const result = await timeRepository.findByBarberId(barberId);
+    expect(result).toBeNull();
   });
 
   it("deve retornar erro se barbeiro não encontrado", async () => {

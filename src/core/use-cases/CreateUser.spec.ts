@@ -15,7 +15,8 @@ describe("CreateUser", () => {
       telephone: "11999999999",
     };
 
-    const user = await sut.execute(data);
+    const result = await sut.execute(data);
+    const user = result.user;
 
     expect(user).toHaveProperty("id");
     expect(user.name).toBe(data.name);
@@ -33,7 +34,8 @@ describe("CreateUser", () => {
       telephone: "11999999999",
     };
 
-    const user = await sut.execute(data);
+    const result = await sut.execute(data);
+    const user = result.user;
 
     expect(user.type).toBe("CLIENT");
   });

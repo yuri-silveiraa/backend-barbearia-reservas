@@ -22,6 +22,7 @@ describe("CreateBarberController", () => {
         name: "Carlos",
         email: "carlos@barbearia.com",
         password: "123456",
+        telephone: "11999999999",
         isAdmin: false,
       },
     });
@@ -35,6 +36,7 @@ describe("CreateBarberController", () => {
         name: "Carlos",
         email: "carlos@barbearia.com",
         password: "123456",
+        telephone: "11999999999",
         type: "BARBER",
       },
       false
@@ -69,6 +71,7 @@ describe("CreateBarberController", () => {
         name: "Admin",
         email: "admin@barbearia.com",
         password: "123456",
+        telephone: "11999999999",
         isAdmin: true,
       },
     });

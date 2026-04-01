@@ -6,12 +6,16 @@ describe("RegisterUserController", () => {
   it("deve registrar um novo usuário cliente e retornar dados sem senha", async () => {
     const mockCreateUser = {
       execute: jest.fn().mockResolvedValue({
-        id: "1",
-        name: "Yuri",
-        email: "yuri@teste.com",
-        password: "hashedpassword",
-        type: "CLIENT",
-        createdAt: new Date(),
+        user: {
+          id: "1",
+          name: "Yuri",
+          email: "yuri@teste.com",
+          password: "hashedpassword",
+          type: "CLIENT",
+          emailVerified: false,
+          createdAt: new Date(),
+        },
+        code: "123456",
       }),
     };
 
@@ -39,6 +43,7 @@ describe("RegisterUserController", () => {
     expect(res.send).toHaveBeenCalledWith({
       name: "Yuri",
       email: "yuri@teste.com",
+      emailVerified: false,
     });
   });
 

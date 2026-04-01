@@ -37,7 +37,7 @@ describe("CanceledAppointment", () => {
 
     const time = await timeRepository.create({
       barberId: "barber-1",
-      date: new Date(),
+      date: new Date(Date.now() + 60 * 60 * 1000),
     });
     await timeRepository.updateDisponible(time.id, false);
 
@@ -63,7 +63,7 @@ describe("CanceledAppointment", () => {
 
     const time = await timeRepository.create({
       barberId: "barber-1",
-      date: new Date(),
+      date: new Date(Date.now() + 60 * 60 * 1000),
     });
     await timeRepository.updateDisponible(time.id, false);
 

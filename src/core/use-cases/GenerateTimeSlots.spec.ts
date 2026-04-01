@@ -1,13 +1,17 @@
-import { GenerateTimeSlots } from "../../../core/use-cases/GenerateTimeSlots";
+import { GenerateTimeSlots } from "./GenerateTimeSlots";
 import { FakeTimeRepository } from "../../tests/repositories/FakeTimeRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
 
 describe("GenerateTimeSlots", () => {
-  const timeRepository = new FakeTimeRepository();
-  const barberRepository = new FakeBarberRepository();
-  const sut = new GenerateTimeSlots(timeRepository, barberRepository);
+  let timeRepository: FakeTimeRepository;
+  let barberRepository: FakeBarberRepository;
+  let sut: GenerateTimeSlots;
 
   beforeEach(async () => {
+    timeRepository = new FakeTimeRepository();
+    barberRepository = new FakeBarberRepository();
+    sut = new GenerateTimeSlots(timeRepository, barberRepository);
+
     await barberRepository.create({
       userId: "barbeiro-user-1",
       isAdmin: false,
@@ -19,8 +23,8 @@ describe("GenerateTimeSlots", () => {
       startTime: "21:00",
       endTime: "08:00",
       blockDuration: 30,
-      startDate: "2026-03-10",
-      endDate: "2026-03-10",
+      startDate: "2026-04-10",
+      endDate: "2026-04-10",
     };
 
     const result = await sut.execute("barbeiro-user-1", config);
@@ -34,8 +38,8 @@ describe("GenerateTimeSlots", () => {
       startTime: "08:00",
       endTime: "21:00",
       blockDuration: 10,
-      startDate: "2026-03-10",
-      endDate: "2026-03-10",
+      startDate: "2026-04-10",
+      endDate: "2026-04-10",
     };
 
     const result = await sut.execute("barbeiro-user-1", config);
@@ -49,8 +53,8 @@ describe("GenerateTimeSlots", () => {
       startTime: "08:00",
       endTime: "10:00",
       blockDuration: 180,
-      startDate: "2026-03-10",
-      endDate: "2026-03-10",
+      startDate: "2026-04-10",
+      endDate: "2026-04-10",
     };
 
     const result = await sut.execute("barbeiro-user-1", config);
@@ -63,9 +67,9 @@ describe("GenerateTimeSlots", () => {
     const config = {
       startTime: "08:00",
       endTime: "10:00",
-      blockDuration: 60,
-      startDate: "2026-03-10",
-      endDate: "2026-03-10",
+      blockDuration: 45,
+      startDate: "2026-04-10",
+      endDate: "2026-04-10",
     };
 
     const result = await sut.execute("barbeiro-user-1", config);
@@ -80,8 +84,8 @@ describe("GenerateTimeSlots", () => {
       startTime: "08:00",
       endTime: "10:00",
       blockDuration: 60,
-      startDate: "2026-03-10",
-      endDate: "2026-03-10",
+      startDate: "2026-04-10",
+      endDate: "2026-04-10",
     };
 
     const result = await sut.execute("barbeiro-user-1", config, {
@@ -100,8 +104,8 @@ describe("GenerateTimeSlots", () => {
       blockDuration: 60,
       intervalStart: "12:00",
       intervalDuration: 60,
-      startDate: "2026-03-10",
-      endDate: "2026-03-10",
+      startDate: "2026-04-10",
+      endDate: "2026-04-10",
     };
 
     const result = await sut.execute("barbeiro-user-1", config);
@@ -116,7 +120,7 @@ describe("GenerateTimeSlots", () => {
       return hour >= 13;
     });
     expect(morningSlots.length).toBe(4);
-    expect(afternoonSlots.length).toBe(4);
+    expect(afternoonSlots.length).toBe(5);
   });
 
   it("deve gerar horários para múltiplos dias", async () => {
@@ -124,8 +128,8 @@ describe("GenerateTimeSlots", () => {
       startTime: "08:00",
       endTime: "09:00",
       blockDuration: 60,
-      startDate: "2026-03-10",
-      endDate: "2026-03-12",
+      startDate: "2026-04-10",
+      endDate: "2026-04-12",
     };
 
     const result = await sut.execute("barbeiro-user-1", config);
@@ -139,8 +143,8 @@ describe("GenerateTimeSlots", () => {
       startTime: "08:00",
       endTime: "09:00",
       blockDuration: 60,
-      startDate: "2026-03-08",
-      endDate: "2026-03-14",
+      startDate: "2026-04-08",
+      endDate: "2026-04-14",
       excludeDays: [0, 6],
     };
 

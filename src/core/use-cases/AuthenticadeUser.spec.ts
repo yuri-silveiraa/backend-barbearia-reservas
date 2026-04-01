@@ -20,6 +20,7 @@ describe("AuthenticateUser", () => {
       password: "123456",
       type: "BARBER" as const,
       telephone: "11999999999",
+      emailVerified: true,
     };
     validUser.password = await bcrypt.hash(validUser.password, 6);
     const userValid = await usersRepository.create(validUser);
@@ -42,6 +43,7 @@ describe("AuthenticateUser", () => {
       password: "123456",
       type: "BARBER" as const,
       telephone: "11999999999",
+      emailVerified: true,
     };
     validUser.password = await bcrypt.hash(validUser.password, 6);
     await usersRepository.create(validUser);
@@ -54,4 +56,3 @@ describe("AuthenticateUser", () => {
     await expect(sut.execute(req)).rejects.toThrow(InvalidCredentialsError);
   });
 });
-

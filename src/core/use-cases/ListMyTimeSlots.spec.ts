@@ -1,4 +1,4 @@
-import { ListMyTimeSlots } from "../../../core/use-cases/ListMyTimeSlots";
+import { ListMyTimeSlots } from "./ListMyTimeSlots";
 import { FakeTimeRepository } from "../../tests/repositories/FakeTimeRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
 
@@ -15,12 +15,12 @@ describe("ListMyTimeSlots", () => {
 
     await timeRepository.create({
       barberId: barber.id,
-      date: new Date("2026-03-10T08:00:00"),
+      date: new Date("2026-04-10T08:00:00"),
     });
 
     await timeRepository.create({
       barberId: barber.id,
-      date: new Date("2026-03-10T09:00:00"),
+      date: new Date("2026-04-10T09:00:00"),
     });
   });
 
@@ -37,6 +37,11 @@ describe("ListMyTimeSlots", () => {
   });
 
   it("deve retornar array vazio se não houver horários", async () => {
+    await barberRepository.create({
+      userId: "barbeiro-user-2",
+      isAdmin: false,
+    });
+
     const result = await sut.execute("barbeiro-user-2");
 
     expect(result).toEqual([]);

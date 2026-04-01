@@ -1,10 +1,17 @@
-import { Request, Response } from "express";
 import { AuthenticateUser } from "../../../../core/use-cases/AuthenticateUser";
 import { LoginUserController } from "./LoginUserController";
 import dotenv from 'dotenv';
 import { mockRequest, mockResponse } from "../../../../tests/utils/MockExpress";
 
 dotenv.config()
+
+jest.mock("../../../database/prisma/prismaClient", () => ({
+  prisma: {
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ barber: { isAdmin: false } }),
+    },
+  },
+}));
 
 describe('LoginUserController', () => {
   it('deve autenticar um usuário e definir cookie HttpOnly', async () => {

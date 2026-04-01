@@ -1,4 +1,4 @@
-import { ToggleTimeSlot } from "../../../core/use-cases/ToggleTimeSlot";
+import { ToggleTimeSlot } from "./ToggleTimeSlot";
 import { FakeTimeRepository } from "../../tests/repositories/FakeTimeRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
 
@@ -7,20 +7,23 @@ describe("ToggleTimeSlot", () => {
   const barberRepository = new FakeBarberRepository();
   const sut = new ToggleTimeSlot(timeRepository, barberRepository);
 
+  let barberId = "";
+
   beforeEach(async () => {
     const barber = await barberRepository.create({
       userId: "barbeiro-user-1",
       isAdmin: false,
     });
+    barberId = barber.id;
 
     await timeRepository.create({
       barberId: barber.id,
-      date: new Date("2026-03-10T08:00:00"),
+      date: new Date("2026-04-10T08:00:00"),
     });
   });
 
   it("deve alternar disponibilidade do horário", async () => {
-    const timeSlots = await timeRepository.findByBarberId("barber-1");
+    const timeSlots = await timeRepository.findByBarberId(barberId);
     const timeSlotId = timeSlots![0].id;
 
     const result = await sut.execute("barbeiro-user-1", timeSlotId);

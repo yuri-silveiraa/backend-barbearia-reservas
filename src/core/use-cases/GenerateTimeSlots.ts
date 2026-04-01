@@ -212,7 +212,7 @@ export class GenerateTimeSlots {
 
     const validation = this.validateConfig(config);
 
-    if (!validation.isValid && !selectedOption) {
+    if ((!validation.isValid || validation.warning) && !selectedOption) {
       return { timeSlots: [], validation };
     }
 

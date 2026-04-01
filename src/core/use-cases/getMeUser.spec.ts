@@ -13,6 +13,7 @@ describe("GetMeUser", () => {
       password: "hashed",
       type: "CLIENT",
       telephone: "11999999999",
+      emailVerified: true,
     });
 
     const user = await sut.execute(createdUser.id);
