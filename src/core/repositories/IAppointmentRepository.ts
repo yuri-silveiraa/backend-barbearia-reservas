@@ -1,4 +1,5 @@
 import { AppointmentDTO } from '../dtos/AppointmentDTO';
+import { BarberCompletedAppointmentDTO } from '../dtos/BarberCompletedAppointmentDTO';
 import { Appointment } from '../entities/Appointment';
 
 export interface IAppointmentsRepository {
@@ -7,6 +8,7 @@ export interface IAppointmentsRepository {
   findById(id: string): Promise<AppointmentDTO | null>;
   findByBarberIdToday(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]>;
   findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]>;
+  findCompletedByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<BarberCompletedAppointmentDTO[]>;
   countByClientSince(clientId: string, since: Date): Promise<number>;
   countCompletedByBarberToday(barberId: string, date: Date): Promise<number>;
   attend(id: string): Promise<boolean>;

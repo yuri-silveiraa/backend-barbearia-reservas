@@ -41,6 +41,18 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
     return appointments.map(a => this.toDTO(a));
   }
 
+  async findCompletedByBarberIdRange(barberId: string, startDate: Date, endDate: Date) {
+    const appointments = this.appointments.filter(
+      a => a.barberId === barberId && a.status === "COMPLETED"
+    );
+    return appointments.map(a => ({
+      serviceId: a.serviceId,
+      service: "Service Name",
+      price: 0,
+      time: a.createdAt,
+    }));
+  }
+
   async countByClientSince(clientId: string, since: Date): Promise<number> {
     return this.appointments.filter(
       a => a.clientId === clientId && a.createdAt >= since && a.status === "SCHEDULED"

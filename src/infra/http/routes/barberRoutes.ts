@@ -41,7 +41,12 @@ const listBarberAppointmentsByRangeController = new ListBarberAppointmentsByRang
 const getBarberDailyStats = new GetBarberDailyStats(appointmentRepo, barberRepo, balanceRepo);
 const getBarberDailyStatsController = new GetBarberDailyStatsController(getBarberDailyStats);
 
-const listBarberPaymentsByRange = new ListBarberPaymentsByRange(barberRepo, balanceRepo, paymentRepo);
+const listBarberPaymentsByRange = new ListBarberPaymentsByRange(
+  barberRepo,
+  balanceRepo,
+  paymentRepo,
+  appointmentRepo
+);
 const listBarberPaymentsByRangeController = new ListBarberPaymentsByRangeController(listBarberPaymentsByRange);
 
 const createBarber = new CreateBarber(userRepo, barberRepo, balanceRepo);
