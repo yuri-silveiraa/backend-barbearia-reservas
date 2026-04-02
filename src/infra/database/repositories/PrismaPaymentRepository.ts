@@ -19,4 +19,17 @@ export class PrismaPaymentRepository implements IPaymentRepository {
       },
     });
   }
+
+  async findByBalanceIdRange(balanceId: string, startDate: Date, endDate: Date): Promise<Payment[]> {
+    return await prisma.payment.findMany({
+      where: {
+        balanceId,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 }

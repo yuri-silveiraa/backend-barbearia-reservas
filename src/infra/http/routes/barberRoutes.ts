@@ -12,17 +12,21 @@ import { GetBarberDailyStats } from "../../../core/use-cases/GetBarberDailyStats
 import { GetBarberDailyStatsController } from "../controllers/barber/GetBarberDailyStatsController";
 import { PrismaAppointmentRepository } from "../../database/repositories/PrismaAppointmentRepository";
 import { PrismaBalanceRepository } from "../../database/repositories/PrismaBalanceRepository";
+import { PrismaPaymentRepository } from "../../database/repositories/PrismaPaymentRepository";
 import { CreateBarber } from "../../../core/use-cases/CreateBarber";
 import { CreateBarberController } from "../controllers/barber/CreateBarberController";
 import { DeleteBarberController } from "../controllers/barber/DeleteBarberController";
 import { PrismaUsersRepository } from "../../database/repositories/PrismaUsersRepository";
 import { AuthenticatedRequest } from "../helpers/requestInterface";
+import { ListBarberPaymentsByRange } from "../../../core/use-cases/ListBarberPaymentsByRange";
+import { ListBarberPaymentsByRangeController } from "../controllers/barber/ListBarberPaymentsByRangeController";
 
 const barberRoutes = Router();
 
 const barberRepo = new PrismaBarberRepository();
 const appointmentRepo = new PrismaAppointmentRepository();
 const balanceRepo = new PrismaBalanceRepository();
+const paymentRepo = new PrismaPaymentRepository();
 const userRepo = new PrismaUsersRepository();
 
 const listBarber = new ListBarber(barberRepo);
@@ -36,6 +40,9 @@ const listBarberAppointmentsByRangeController = new ListBarberAppointmentsByRang
 
 const getBarberDailyStats = new GetBarberDailyStats(appointmentRepo, barberRepo, balanceRepo);
 const getBarberDailyStatsController = new GetBarberDailyStatsController(getBarberDailyStats);
+
+const listBarberPaymentsByRange = new ListBarberPaymentsByRange(barberRepo, balanceRepo, paymentRepo);
+const listBarberPaymentsByRangeController = new ListBarberPaymentsByRangeController(listBarberPaymentsByRange);
 
 const createBarber = new CreateBarber(userRepo, barberRepo, balanceRepo);
 const createBarberController = new CreateBarberController(createBarber);
@@ -62,6 +69,12 @@ barberRoutes.get(
   "/daily-stats",
   ensureBarber,
   (req, res) => getBarberDailyStatsController.handle(req as AuthenticatedRequest, res)
+);
+
+barberRoutes.get(
+  "/payments",
+  ensureBarber,
+  (req, res) => listBarberPaymentsByRangeController.handle(req as AuthenticatedRequest, res)
 );
 
 barberRoutes.post(
