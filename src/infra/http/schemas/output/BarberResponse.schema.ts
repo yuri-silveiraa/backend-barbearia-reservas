@@ -12,5 +12,8 @@ export const BarberResponseSchema = z.array(
     id: barber.id,
     userId: barber.userId,
     nome: barber.name,
+    isAdmin: barber.isAdmin,
+    isActive: barber.isActive,
+    createdAt: barber.createdAt,
   }))
 )
