@@ -5,15 +5,17 @@ import { User } from '../../../../core/entities/User';
 import { sign } from 'jsonwebtoken';
 import { env } from '../../../../config/env';
 import { getAuthCookieOptions } from '../../helpers/authCookie';
-import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 
 export class GoogleAuthController {
   private usersRepository: PrismaUsersRepository;
   private authenticateWithGoogle: AuthenticateWithGoogle;
+  private client: OAuth2Client;
 
   constructor() {
     this.usersRepository = new PrismaUsersRepository();
     this.authenticateWithGoogle = new AuthenticateWithGoogle(this.usersRepository);
+    this.client = new OAuth2Client(env.googleClientId);
   }
 
   async handle(req: Request, res: Response) {
@@ -24,17 +26,25 @@ export class GoogleAuthController {
     }
 
     try {
-      const decoded = jwt.decode(credential);
-      
-      if (!decoded || typeof decoded !== 'object' || !('sub' in decoded)) {
+      if (!env.googleClientId) {
+        return res.status(500).json({ message: 'Google client ID não configurado' });
+      }
+
+      const ticket = await this.client.verifyIdToken({
+        idToken: credential,
+        audience: env.googleClientId,
+      });
+
+      const googlePayload = ticket.getPayload();
+      if (!googlePayload?.sub || !googlePayload.email || !googlePayload.name) {
         return res.status(400).json({ message: 'Token Google inválido' });
       }
 
       const payload: GoogleUserPayload = {
-        sub: decoded.sub as string,
-        email: decoded.email as string,
-        name: decoded.name as string,
-        picture: decoded.picture as string | undefined,
+        sub: googlePayload.sub,
+        email: googlePayload.email,
+        name: googlePayload.name,
+        picture: googlePayload.picture,
       };
 
       const user = await this.authenticateWithGoogle.execute(payload);

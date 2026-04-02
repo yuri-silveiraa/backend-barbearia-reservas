@@ -47,6 +47,7 @@ services:
       dockerfile: Dockerfile.prod
       args:
         VITE_BASE_URL_API: https://api.yuri-pires-dev.tech
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
     container_name: front-barbearia
     restart: unless-stopped
     networks:

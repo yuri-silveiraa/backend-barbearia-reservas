@@ -8,6 +8,7 @@ const optionalEnvVars = [
   'BREVO_API_KEY',
   'BREVO_SENDER_EMAIL',
   'BREVO_SENDER_NAME',
+  'GOOGLE_CLIENT_ID',
 ] as const;
 
 type EnvVar = typeof requiredEnvVars[number];
@@ -53,4 +54,5 @@ export const env = {
     senderName: brevoSenderName,
     enabled: Boolean(brevoApiKey && brevoSenderEmail),
   },
+  googleClientId: getOptionalEnv('GOOGLE_CLIENT_ID'),
 } as const;
