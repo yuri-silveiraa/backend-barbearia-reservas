@@ -26,21 +26,6 @@ export class PrismaUsersRepository implements IUserRepository {
         }
       });
     }
-    if (user.type == "BARBER") {
-      await prisma.barber.create({
-        data: {
-          userId: user.id,
-        }
-      });
-      await prisma.balance.create({
-        data: {
-          barber: {
-            connect: { userId: user.id }
-          },
-          balance: 0,
-        }
-      });
-    }
     return user;
   }
   async findById(id: string): Promise<User | null> {
