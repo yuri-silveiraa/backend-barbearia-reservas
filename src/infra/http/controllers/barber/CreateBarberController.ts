@@ -7,7 +7,6 @@ const CreateBarberSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   telephone: z.string().min(11),
-  isAdmin: z.boolean().optional().default(false),
 });
 
 export class CreateBarberController {
@@ -21,7 +20,7 @@ export class CreateBarberController {
       password: data.password,
       telephone: data.telephone,
       type: "BARBER",
-    }, data.isAdmin || false);
+    }, false);
     
     const { password, ...userWithoutPassword } = user;
     return res.status(201).json({ user: userWithoutPassword });
