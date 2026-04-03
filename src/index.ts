@@ -54,6 +54,16 @@ async function cleanupUnverifiedUsers() {
   cutoff.setHours(cutoff.getHours() - 24);
 
   try {
+    await prisma.client.deleteMany({
+      where: {
+        user: {
+          emailVerified: false,
+          provider: null,
+          createdAt: { lt: cutoff },
+        },
+      },
+    });
+
     const result = await prisma.user.deleteMany({
       where: {
         emailVerified: false,
