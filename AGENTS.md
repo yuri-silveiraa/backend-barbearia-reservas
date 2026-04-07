@@ -245,3 +245,7 @@ describe("CreateUser", () => {
 - Use async/await consistently
 - Handle errors with domain-specific exceptions
 - Never expose sensitive data (passwords, tokens) in responses
+- Atualize `ENGINEERING_MEMORY.md` neste repositório após mudanças relevantes (bugs, fluxos, contratos, descobertas sobre erros recorrentes).
+- Use `codex-skills/project-memory/SKILL.md` como guia para manter o protocolo consistente.
+- After relevant backend changes, update `/home/yuri/projetos/ENGINEERING_MEMORY.md`
+- Record recurring errors, root cause, fix strategy, and validation so future agents can reuse the solution
