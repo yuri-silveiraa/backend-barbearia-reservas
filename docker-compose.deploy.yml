@@ -34,9 +34,11 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.barbearia-api.rule=Host(`api.yuri-pires-dev.tech`)"
+      - "traefik.http.routers.barbearia-api.rule=Host(`douglas-barbearia.com`) || Host(`www.douglas-barbearia.com`) && PathPrefix(`/api`)"
       - "traefik.http.routers.barbearia-api.entrypoints=websecure"
       - "traefik.http.routers.barbearia-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.barbearia-api.middlewares=barbearia-api-stripprefix@docker"
+      - "traefik.http.middlewares.barbearia-api-stripprefix.stripprefix.prefixes=/api"
       - "traefik.http.services.barbearia-api.loadbalancer.server.port=3000"
 
   frontend:
@@ -44,7 +46,7 @@ services:
       context: ../front-barbearia
       dockerfile: Dockerfile.prod
       args:
-        VITE_BASE_URL_API: https://api.yuri-pires-dev.tech
+        VITE_BASE_URL_API: /api
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
     container_name: front-barbearia
     restart: unless-stopped
@@ -52,7 +54,7 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.barbearia-front.rule=Host(`douglas-barbearia.com`,`www.douglas-barbearia.com`)"
+      - "traefik.http.routers.barbearia-front.rule=Host(`douglas-barbearia.com`) || Host(`www.douglas-barbearia.com`)"
       - "traefik.http.routers.barbearia-front.entrypoints=websecure"
       - "traefik.http.routers.barbearia-front.tls.certresolver=letsencrypt"
       - "traefik.http.services.barbearia-front.loadbalancer.server.port=80"
