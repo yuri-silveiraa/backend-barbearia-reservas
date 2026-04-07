@@ -34,7 +34,7 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.barbearia-api.rule=Host(`douglas-barbearia.com`) || Host(`www.douglas-barbearia.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.barbearia-api.rule=(Host(`douglas-barbearia.com`) || Host(`www.douglas-barbearia.com`)) && PathPrefix(`/api`)"
       - "traefik.http.routers.barbearia-api.entrypoints=websecure"
       - "traefik.http.routers.barbearia-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.barbearia-api.middlewares=barbearia-api-stripprefix@docker"
@@ -54,7 +54,7 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.barbearia-front.rule=Host(`douglas-barbearia.com`) || Host(`www.douglas-barbearia.com`)"
+      - "traefik.http.routers.barbearia-front.rule=(Host(`douglas-barbearia.com`) || Host(`www.douglas-barbearia.com`))"
       - "traefik.http.routers.barbearia-front.entrypoints=websecure"
       - "traefik.http.routers.barbearia-front.tls.certresolver=letsencrypt"
       - "traefik.http.services.barbearia-front.loadbalancer.server.port=80"
