@@ -16,6 +16,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - dev-network
 
   api:
     build:
@@ -39,6 +41,28 @@ services:
       - .:/app
       - /app/node_modules
     command: sh -c "npx prisma migrate deploy && npm run dev"
+    networks:
+      - dev-network
+
+  frontend:
+    build:
+      context: ../barbearia-front
+      dockerfile: Dockerfile
+    container_name: front-barbearia-dev
+    restart: unless-stopped
+    environment:
+      VITE_BASE_URL_API: http://localhost:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../barbearia-front:/app
+      - /app/node_modules
+    networks:
+      - dev-network
 
 volumes:
   barbearia-dev:
+
+networks:
+  dev-network:
+    driver: bridge
