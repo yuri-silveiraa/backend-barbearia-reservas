@@ -13,6 +13,8 @@ import swaggerFile from "./swagger-output.json";
 import { env } from './config/env';
 import { csrfMiddleware, generateCsrfToken } from './infra/http/helpers/csrf';
 import { prisma } from './infra/database/prisma/prismaClient';
+import cron from "node-cron";
+import { sendDailyWhatsappReminders } from "./infra/jobs/sendWhatsappReminders";
 
 const app = express();
 const port = env.port;
@@ -81,3 +83,13 @@ async function cleanupUnverifiedUsers() {
 
 cleanupUnverifiedUsers();
 setInterval(cleanupUnverifiedUsers, 6 * 60 * 60 * 1000);
+
+cron.schedule(
+  "0 7 * * *",
+  () => {
+    sendDailyWhatsappReminders().catch((error) =>
+      console.error("Falha ao enviar lembretes WhatsApp", error)
+    );
+  },
+  { timezone: "America/Sao_Paulo" }
+);

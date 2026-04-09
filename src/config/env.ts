@@ -9,6 +9,10 @@ const optionalEnvVars = [
   'BREVO_SENDER_EMAIL',
   'BREVO_SENDER_NAME',
   'GOOGLE_CLIENT_ID',
+  'WHATSAPP_TOKEN',
+  'WHATSAPP_PHONE_NUMBER_ID',
+  'WHATSAPP_TEMPLATE_NAME',
+  'WHATSAPP_TEMPLATE_LANGUAGE',
 ] as const;
 
 type EnvVar = typeof requiredEnvVars[number];
@@ -55,4 +59,10 @@ export const env = {
     enabled: Boolean(brevoApiKey && brevoSenderEmail),
   },
   googleClientId: getOptionalEnv('GOOGLE_CLIENT_ID'),
+  whatsapp: {
+    token: getOptionalEnv('WHATSAPP_TOKEN'),
+    phoneNumberId: getOptionalEnv('WHATSAPP_PHONE_NUMBER_ID'),
+    templateName: getOptionalEnv('WHATSAPP_TEMPLATE_NAME'),
+    templateLanguage: getOptionalEnv('WHATSAPP_TEMPLATE_LANGUAGE') || 'pt_BR',
+  },
 } as const;
