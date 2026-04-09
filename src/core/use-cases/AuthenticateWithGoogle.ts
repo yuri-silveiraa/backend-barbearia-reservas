@@ -1,6 +1,7 @@
 import { User } from "../entities/User";
 import { IUserRepository } from "../repositories/IUserRepository";
 import { prisma } from "../../infra/database/prisma/prismaClient";
+import { formatName } from "../utils/formatName";
 
 export interface GoogleUserPayload {
   sub: string;
@@ -26,17 +27,19 @@ export class AuthenticateWithGoogle {
           data: {
             provider: "google",
             providerId: payload.sub,
+            emailVerified: true,
           }
         });
       } else {
         user = await this.usersRepository.create({
-          name: payload.name,
+          name: formatName(payload.name),
           email: payload.email,
           password: null,
           type: "CLIENT",
           provider: "google",
           providerId: payload.sub,
           telephone: "",
+          emailVerified: true,
         });
       }
     }

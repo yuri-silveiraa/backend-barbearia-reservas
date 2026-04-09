@@ -2,6 +2,7 @@ import { UpdateUserDTO } from "../dtos/UpdateUserDTO";
 import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
 import { UserNotFoundError } from "../errors/UserNotFoundError";
 import { IUserRepository } from "../repositories/IUserRepository";
+import { formatName } from "../utils/formatName";
 
 export class UpdateUser {
   constructor(private usersRepository: IUserRepository) {}
@@ -18,7 +19,7 @@ export class UpdateUser {
     }
 
     await this.usersRepository.update(data.userId, {
-      name: data.name ?? user.name,
+      name: data.name ? formatName(data.name) : user.name,
       email: data.email ?? user.email,
       telephone: data.telephone ?? user.telephone,
     });

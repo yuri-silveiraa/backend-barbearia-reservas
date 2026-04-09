@@ -4,6 +4,7 @@ import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
 import { IUserRepository } from "../repositories/IUserRepository";
 import bcrypt from "bcrypt";
 import { sendVerificationEmail } from "../../infra/email/mailer";
+import { formatName } from "../utils/formatName";
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -26,7 +27,7 @@ export class CreateUser {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     
     const user = await this.usersRepository.create({
-      name: data.name,
+      name: formatName(data.name),
       email: data.email,
       password: hashedPassword,
       type: "CLIENT",
