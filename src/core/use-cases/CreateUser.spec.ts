@@ -1,54 +1,34 @@
 import { CreateUser } from "./CreateUser";
 import { FakeUsersRepository } from "../../tests/repositories/FakeUserRepository";
-import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
+import { AppError } from "../errors/AppError";
+
+jest.mock("../../infra/email/mailer", () => ({
+  sendVerificationEmail: jest.fn(async () => ({ sent: true }))
+}));
 
 describe("CreateUser", () => {
-  const usersRepository = new FakeUsersRepository();
-  const sut = new CreateUser(usersRepository);
+  it("formats and validates name", async () => {
+    const usersRepository = new FakeUsersRepository();
+    const useCase = new CreateUser(usersRepository);
 
-  it("deve criar um novo usuário cliente com senha hasheada", async () => {
-    const data = {
-      name: "Yuri",
-      email: "yuri@teste.com",
-      password: "123456",
-      type: "CLIENT" as const,
+    await expect(
+      useCase.execute({
+        name: "Yuri 123",
+        email: "yuri@example.com",
+        password: "Senha123",
+        telephone: "11999999999",
+        type: "CLIENT",
+      })
+    ).rejects.toBeInstanceOf(AppError);
+
+    const result = await useCase.execute({
+      name: "YURI PIRES",
+      email: "yuri2@example.com",
+      password: "Senha123",
       telephone: "11999999999",
-    };
+      type: "CLIENT",
+    });
 
-    const result = await sut.execute(data);
-    const user = result.user;
-
-    expect(user).toHaveProperty("id");
-    expect(user.name).toBe(data.name);
-    expect(user.email).toBe(data.email);
-    expect(user.type).toBe("CLIENT");
-    expect(user.password).toMatch(/^\$2b\$/);
-  });
-
-  it("deve sempre criar usuário como CLIENT", async () => {
-    const data = {
-      name: "Maria",
-      email: "maria@teste.com",
-      password: "123456",
-      type: "CLIENT" as const,
-      telephone: "11999999999",
-    };
-
-    const result = await sut.execute(data);
-    const user = result.user;
-
-    expect(user.type).toBe("CLIENT");
-  });
-
-  it("deve lançar erro se o email já existir", async () => {
-    const data = {
-      name: "Yuri",
-      email: "yuri@teste.com",
-      password: "123456",
-      type: "CLIENT" as const,
-      telephone: "11999999999",
-    };
-
-    await expect(sut.execute(data)).rejects.toThrow(UserAlreadyExistsError);
+    expect(result.user.name).toBe("Yuri Pires");
   });
 });

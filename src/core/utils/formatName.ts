@@ -9,3 +9,7 @@ export function formatName(value: string): string {
     })
     .join(" ");
 }
+
+export function isNameValid(value: string): boolean {
+  return /^[\p{L}\s]+$/u.test(value.trim());
+}

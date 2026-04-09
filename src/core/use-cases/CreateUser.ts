@@ -4,7 +4,8 @@ import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
 import { IUserRepository } from "../repositories/IUserRepository";
 import bcrypt from "bcrypt";
 import { sendVerificationEmail } from "../../infra/email/mailer";
-import { formatName } from "../utils/formatName";
+import { formatName, isNameValid } from "../utils/formatName";
+import { AppError } from "../errors/AppError";
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -22,6 +23,10 @@ export class CreateUser {
 
     if (userAlreadyExists) {
       throw new UserAlreadyExistsError(data.email);
+    }
+
+    if (!isNameValid(data.name)) {
+      throw new AppError("Nome deve conter apenas letras");
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);

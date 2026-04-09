@@ -2,7 +2,8 @@ import { UpdateUserDTO } from "../dtos/UpdateUserDTO";
 import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
 import { UserNotFoundError } from "../errors/UserNotFoundError";
 import { IUserRepository } from "../repositories/IUserRepository";
-import { formatName } from "../utils/formatName";
+import { formatName, isNameValid } from "../utils/formatName";
+import { AppError } from "../errors/AppError";
 
 export class UpdateUser {
   constructor(private usersRepository: IUserRepository) {}
@@ -16,6 +17,10 @@ export class UpdateUser {
       if (existing && existing.id !== user.id) {
         throw new UserAlreadyExistsError(data.email);
       }
+    }
+
+    if (data.name && !isNameValid(data.name)) {
+      throw new AppError("Nome deve conter apenas letras");
     }
 
     await this.usersRepository.update(data.userId, {
