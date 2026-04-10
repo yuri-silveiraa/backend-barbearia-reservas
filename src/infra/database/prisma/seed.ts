@@ -19,8 +19,8 @@ type PublicSeedUser = {
 };
 
 const CLIENT_USERS_TOTAL = 30;
-const MIN_SERVICE_ROWS = 20;
-const MIN_TIME_ROWS = 300;
+const MIN_SERVICE_ROWS = 5;
+const MIN_TIME_ROWS = 700;
 const MIN_APPOINTMENT_ROWS = 300;
 const MIN_PAYMENT_ROWS = 300;
 const SEED_DAYS_WINDOW = 45;
@@ -223,18 +223,6 @@ async function seedServices(total: number) {
   for (const service of baseServices) {
     await ensureService(service.name, service.description, service.price);
   }
-
-  for (let index = baseServices.length; index < total; index++) {
-    const serviceNumber = String(index + 1).padStart(3, "0");
-    await prisma.service.create({
-      data: {
-        name: `Servico ${serviceNumber}`,
-        description: `Servico adicional ${serviceNumber} para simular volume real`,
-        price: randomInt(45, 250),
-        active: true,
-      },
-    });
-  }
 }
 
 async function seedTimes(total: number) {
@@ -249,9 +237,10 @@ async function seedTimes(total: number) {
   );
 
   for (let index = 0; index < total; index++) {
-    const barber = barbers[index % barbers.length];
-    const dayOffset = dayOffsets[Math.floor(index / (barbers.length * slotHours.length)) % dayOffsets.length];
-    const hour = slotHours[Math.floor(index / barbers.length) % slotHours.length];
+    const slotCycle = Math.floor(index / dayOffsets.length);
+    const barber = barbers[slotCycle % barbers.length];
+    const dayOffset = dayOffsets[index % dayOffsets.length];
+    const hour = slotHours[Math.floor(slotCycle / barbers.length) % slotHours.length];
     const date = dateAtDayOffset(dayOffset, hour);
 
     const created = await prisma.time.create({
@@ -277,9 +266,24 @@ async function seedAppointments(
 
   if (!createdTimes.length || !clients.length || !services.length) return;
 
-  const appointmentsToCreate = Math.min(total, createdTimes.length);
+  const sortedTimes = [...createdTimes].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const pastTimes = sortedTimes.filter((time) => time.date < dateAtDayOffset(0, 0));
+  const todayTimes = sortedTimes.filter(
+    (time) => time.date >= dateAtDayOffset(0, 0) && time.date < dateAtDayOffset(1, 0)
+  );
+  const futureTimes = sortedTimes.filter((time) => time.date >= dateAtDayOffset(1, 0));
+  const targetPast = Math.floor(total * 0.45);
+  const targetToday = Math.min(todayTimes.length, Math.max(0, Math.floor(total * 0.1)));
+  const targetFuture = total - targetPast - targetToday;
+  const mixedTimes = [
+    ...pastTimes.slice(0, targetPast),
+    ...todayTimes.slice(0, targetToday),
+    ...futureTimes.slice(0, targetFuture),
+  ].slice(0, total);
+
+  const appointmentsToCreate = Math.min(total, mixedTimes.length);
   for (let index = 0; index < appointmentsToCreate; index++) {
-    const time = createdTimes[index];
+    const time = mixedTimes[index];
 
     const randomClient = randomFrom(clients);
     const randomService = randomFrom(services);
@@ -316,13 +320,30 @@ async function seedPayments(total: number) {
   const totalsByBalance = new Map<string, number>();
   for (const balance of balances) totalsByBalance.set(balance.id, 0);
 
+  const completedAppointments = await prisma.appointment.findMany({
+    where: { status: AppointmentStatus.COMPLETED },
+    select: {
+      barberId: true,
+      service: { select: { price: true } },
+      time: { select: { date: true } },
+    },
+    orderBy: { time: { date: "asc" } },
+  });
+
+  const balanceByBarberId = new Map(
+    barbers
+      .filter((barber) => barber.Balance)
+      .map((barber) => [barber.id, barber.Balance!])
+  );
+
   for (let index = 0; index < total; index++) {
-    const balance = balances[index % balances.length];
-    const amount = randomInt(20, 120);
-    const dayOffset = -randomInt(0, 90);
-    const hour = randomInt(8, 21);
-    const minute = randomFrom([0, 15, 30, 45]);
-    const createdAt = dateAtDayOffset(dayOffset, hour, minute);
+    const appointment = completedAppointments[index % completedAppointments.length];
+    const balance = appointment ? balanceByBarberId.get(appointment.barberId) : balances[index % balances.length];
+    if (!balance) continue;
+
+    const amount = appointment?.service.price ?? randomInt(20, 120);
+    const fallbackDate = dateAtDayOffset(-randomInt(0, 90), randomInt(8, 21), randomFrom([0, 15, 30, 45]));
+    const createdAt = appointment?.time.date ?? fallbackDate;
 
     await prisma.payment.create({
       data: {
