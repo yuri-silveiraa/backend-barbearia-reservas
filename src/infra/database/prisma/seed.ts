@@ -23,12 +23,7 @@ const MIN_SERVICE_ROWS = 20;
 const MIN_TIME_ROWS = 300;
 const MIN_APPOINTMENT_ROWS = 300;
 const MIN_PAYMENT_ROWS = 300;
-
-const statusPool = [
-  AppointmentStatus.SCHEDULED,
-  AppointmentStatus.COMPLETED,
-  AppointmentStatus.CANCELED,
-];
+const SEED_DAYS_WINDOW = 45;
 
 const firstNames = [
   "Ana",
@@ -76,6 +71,26 @@ function randomEmail(name: string) {
     .replace(/[\u0300-\u036f]/g, "");
 
   return `${slug}.${Date.now()}${randomInt(1000, 9999)}@barbearia.local`;
+}
+
+function dateAtDayOffset(dayOffset: number, hour: number, minute = 0) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + dayOffset);
+  date.setHours(hour, minute, 0, 0);
+  return date;
+}
+
+function getStatusForDayOffset(dayOffset: number) {
+  if (dayOffset < 0) {
+    return randomInt(1, 10) <= 8
+      ? AppointmentStatus.COMPLETED
+      : AppointmentStatus.CANCELED;
+  }
+
+  return randomInt(1, 10) <= 9
+    ? AppointmentStatus.SCHEDULED
+    : AppointmentStatus.CANCELED;
 }
 
 async function clearDatabase() {
@@ -226,20 +241,18 @@ async function seedTimes(total: number) {
   const barbers = await prisma.barber.findMany();
   if (!barbers.length) return [];
 
-  const createdTimes: Array<{ id: string; barberId: string }> = [];
+  const createdTimes: Array<{ id: string; barberId: string; date: Date }> = [];
   const slotHours = [8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19];
-  const baseDate = new Date();
-  baseDate.setHours(0, 0, 0, 0);
+  const dayOffsets = Array.from(
+    { length: SEED_DAYS_WINDOW * 2 + 1 },
+    (_, index) => index - SEED_DAYS_WINDOW
+  );
 
   for (let index = 0; index < total; index++) {
     const barber = barbers[index % barbers.length];
-    const slotIndex = Math.floor(index / barbers.length);
-    const dayOffset = Math.floor(slotIndex / slotHours.length) + 1;
-    const hour = slotHours[slotIndex % slotHours.length];
-
-    const date = new Date(baseDate);
-    date.setDate(baseDate.getDate() + dayOffset);
-    date.setHours(hour, 0, 0, 0);
+    const dayOffset = dayOffsets[Math.floor(index / (barbers.length * slotHours.length)) % dayOffsets.length];
+    const hour = slotHours[Math.floor(index / barbers.length) % slotHours.length];
+    const date = dateAtDayOffset(dayOffset, hour);
 
     const created = await prisma.time.create({
       data: {
@@ -249,7 +262,7 @@ async function seedTimes(total: number) {
       },
     });
 
-    createdTimes.push({ id: created.id, barberId: created.barberId });
+    createdTimes.push({ id: created.id, barberId: created.barberId, date: created.date });
   }
 
   return createdTimes;
@@ -257,7 +270,7 @@ async function seedTimes(total: number) {
 
 async function seedAppointments(
   total: number,
-  createdTimes: Array<{ id: string; barberId: string }>
+  createdTimes: Array<{ id: string; barberId: string; date: Date }>
 ) {
   const clients = await prisma.client.findMany();
   const services = await prisma.service.findMany();
@@ -270,7 +283,10 @@ async function seedAppointments(
 
     const randomClient = randomFrom(clients);
     const randomService = randomFrom(services);
-    const status = randomFrom(statusPool);
+    const dayOffset = Math.round(
+      (time.date.getTime() - dateAtDayOffset(0, 0).getTime()) / (24 * 60 * 60 * 1000)
+    );
+    const status = getStatusForDayOffset(dayOffset);
 
     await prisma.appointment.create({
       data: {
@@ -303,11 +319,16 @@ async function seedPayments(total: number) {
   for (let index = 0; index < total; index++) {
     const balance = balances[index % balances.length];
     const amount = randomInt(20, 120);
+    const dayOffset = -randomInt(0, 90);
+    const hour = randomInt(8, 21);
+    const minute = randomFrom([0, 15, 30, 45]);
+    const createdAt = dateAtDayOffset(dayOffset, hour, minute);
 
     await prisma.payment.create({
       data: {
         balanceId: balance.id,
         amount,
+        createdAt,
       },
     });
 
