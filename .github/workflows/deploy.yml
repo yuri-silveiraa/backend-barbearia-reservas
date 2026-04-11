@@ -17,3 +17,4 @@ jobs:
           cd "$BASE_DIR/front-barbearia" && git pull
           cd "$BASE_DIR/backend-barbearia-reservas"
           docker compose -f docker-compose.deploy.yml up -d --build --no-deps backend
+          docker compose -f docker-compose.deploy.yml exec -T backend npx prisma migrate deploy --schema=src/infra/database/prisma/schema.prisma
