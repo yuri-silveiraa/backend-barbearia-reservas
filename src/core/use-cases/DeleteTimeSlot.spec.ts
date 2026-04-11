@@ -18,7 +18,7 @@ describe("DeleteTimeSlot", () => {
 
     await timeRepository.create({
       barberId: barber.id,
-      date: new Date("2026-04-10T08:00:00"),
+      date: new Date("2030-04-10T08:00:00"),
     });
   });
 

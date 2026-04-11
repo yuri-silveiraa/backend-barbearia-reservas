@@ -7,6 +7,7 @@ export class Appointment {
     public readonly clientId: string,
     public serviceId: string,
     public timeId: string,
+    public price: number = 0,
     public status: AppointmentStatus = "SCHEDULED",
     public readonly createdAt: Date = new Date()
   ) {}

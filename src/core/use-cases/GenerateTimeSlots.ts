@@ -1,7 +1,13 @@
 import { GenerateTimeSlotsDTO, TimeSlotValidationResult, TimeSlotDTO } from "../dtos/GenerateTimeSlotsDTO";
-import { Time } from "../entities/Time";
 import { IBarbersRepository } from "../repositories/IBarberRepository";
 import { ITimeRepository } from "../repositories/ITimeRepository";
+import {
+  addBusinessMonths,
+  businessDateTimeToUtcDate,
+  eachBusinessDateInRange,
+  parseBusinessDate,
+  todayBusinessDate,
+} from "../utils/businessDate";
 
 interface TimeBlock {
   start: string;
@@ -17,11 +23,6 @@ export class GenerateTimeSlots {
   private parseTime(time: string): number {
     const [hours, minutes] = time.split(":").map(Number);
     return hours * 60 + minutes;
-  }
-
-  private parseDateOnly(date: string): Date {
-    const [year, month, day] = date.split("-").map(Number);
-    return new Date(year, month - 1, day);
   }
 
   private formatTime(minutes: number): string {
@@ -48,24 +49,6 @@ export class GenerateTimeSlots {
     const endMinutes = this.addMinutesToTime(config.intervalStart, duration);
 
     return { start: startMinutes, end: endMinutes };
-  }
-
-  private getDaysInRange(startDate: string, endDate: string, excludeDays: number[]): Date[] {
-    const days: Date[] = [];
-    const start = this.parseDateOnly(startDate);
-    const end = this.parseDateOnly(endDate);
-    end.setHours(23, 59, 59, 999);
-
-    const current = new Date(start);
-    while (current <= end) {
-      const dayOfWeek = current.getDay();
-      if (!excludeDays.includes(dayOfWeek)) {
-        days.push(new Date(current));
-      }
-      current.setDate(current.getDate() + 1);
-    }
-
-    return days;
   }
 
   private validateConfig(config: GenerateTimeSlotsDTO): TimeSlotValidationResult {
@@ -100,7 +83,6 @@ export class GenerateTimeSlots {
     if (remainder > 0) {
       const option1Start = config.startTime;
       const option1End = this.formatTime(this.addMinutesToTime(config.startTime, config.blockDuration));
-      
       const option2Start = this.formatTime(this.addMinutesToTime(config.endTime, -config.blockDuration));
       const option2End = config.endTime;
 
@@ -128,7 +110,7 @@ export class GenerateTimeSlots {
       if (intervalWindow.start < endMinutes && intervalWindow.end > startMinutes) {
         const intervalOverlaps = intervalWindow.start < endMinutes && intervalWindow.end > startMinutes;
         if (intervalOverlaps) {
-          if (config.blockDuration > intervalWindow.start - startMinutes && 
+          if (config.blockDuration > intervalWindow.start - startMinutes &&
               config.blockDuration > endMinutes - intervalWindow.end) {
             return {
               isValid: false,
@@ -147,7 +129,7 @@ export class GenerateTimeSlots {
     selectedOption?: { start: string; end: string }
   ): TimeBlock[] {
     const blocks: TimeBlock[] = [];
-    
+
     let periodStart = config.startTime;
     let periodEnd = config.endTime;
 
@@ -166,9 +148,7 @@ export class GenerateTimeSlots {
 
       if (intervalWindow) {
         const blockEndMinutes = currentTime + config.blockDuration;
-
-        const overlapsInterval = 
-          currentTime < intervalWindow.end && blockEndMinutes > intervalWindow.start;
+        const overlapsInterval = currentTime < intervalWindow.end && blockEndMinutes > intervalWindow.start;
 
         if (!overlapsInterval) {
           blocks.push({ start: blockStart, end: blockEnd });
@@ -194,17 +174,20 @@ export class GenerateTimeSlots {
       throw new Error("Barbeiro não encontrado");
     }
 
-    const startDate = this.parseDateOnly(config.startDate);
-    const endDate = this.parseDateOnly(config.endDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const startDate = parseBusinessDate(config.startDate);
+    const endDate = parseBusinessDate(config.endDate);
+
+    if (!startDate || !endDate || startDate > endDate) {
+      throw new Error("Período inválido");
+    }
+
+    const today = todayBusinessDate();
 
     if (startDate < today) {
       throw new Error("Não é possível criar horários no passado");
     }
 
-    const twoMonthsLater = new Date(today);
-    twoMonthsLater.setMonth(twoMonthsLater.getMonth() + 2);
+    const twoMonthsLater = addBusinessMonths(today, 2);
 
     if (endDate > twoMonthsLater) {
       throw new Error("Não é possível criar horários com mais de 2 meses de antecedência");
@@ -228,9 +211,9 @@ export class GenerateTimeSlots {
       };
     }
 
-    const days = this.getDaysInRange(config.startDate, config.endDate, config.excludeDays || []);
+    const days = eachBusinessDateInRange(config.startDate, config.endDate, config.excludeDays || []);
 
-    if (days.length === 0) {
+    if (!days || days.length === 0) {
       return {
         timeSlots: [],
         validation: {
@@ -244,10 +227,10 @@ export class GenerateTimeSlots {
 
     for (const day of days) {
       for (const block of blocks) {
-        const [startHour, startMin] = block.start.split(":").map(Number);
-
-        const slotDate = new Date(day);
-        slotDate.setHours(startHour, startMin, 0, 0);
+        const slotDate = businessDateTimeToUtcDate(day, block.start);
+        if (!slotDate) {
+          continue;
+        }
 
         const existingSlots = await this.timeRepository.findByBarberId(barber.id);
         const conflict = existingSlots?.some(

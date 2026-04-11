@@ -1,17 +1,18 @@
 import { AppointmentDTO } from "../../core/dtos/AppointmentDTO";
 import { Appointment } from "../../core/entities/Appointment";
-import { IAppointmentsRepository } from "../../core/repositories/IAppointmentRepository";
+import { CreateAppointmentRepositoryDTO, IAppointmentsRepository } from "../../core/repositories/IAppointmentRepository";
 
 export class FakeAppointmentRepository implements IAppointmentsRepository {
   private appointments: Appointment[] = [];
 
-  async create(data: Omit<Appointment, 'id' | 'createdAt' | 'status'>): Promise<Appointment> {
+  async create(data: CreateAppointmentRepositoryDTO): Promise<Appointment> {
     const appointment: Appointment = {
       id: String(this.appointments.length + 1),
       barberId: data.barberId,
       clientId: data.clientId,
       serviceId: data.serviceId,
       timeId: data.timeId,
+      price: data.price ?? 0,
       status: "SCHEDULED",
       createdAt: new Date(),
     };
@@ -46,9 +47,10 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
       a => a.barberId === barberId && a.status === "COMPLETED"
     );
     return appointments.map(a => ({
+      id: a.id,
       serviceId: a.serviceId,
       service: "Service Name",
-      price: 0,
+      price: a.price,
       time: a.createdAt,
     }));
   }
@@ -66,9 +68,9 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
     endOfDay.setHours(23, 59, 59, 999);
 
     return this.appointments.filter(
-      a => a.barberId === barberId && 
-           a.status === "COMPLETED" && 
-           a.createdAt >= startOfDay && 
+      a => a.barberId === barberId &&
+           a.status === "COMPLETED" &&
+           a.createdAt >= startOfDay &&
            a.createdAt <= endOfDay
     ).length;
   }
@@ -100,6 +102,7 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
       barber: "Barber Name",
       service: "Service Name",
       time: new Date(),
+      price: appointment.price,
       status: appointment.status,
     };
   }

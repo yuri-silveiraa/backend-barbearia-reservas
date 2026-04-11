@@ -2,42 +2,31 @@ import { AttendAppointment } from "./AttendAppointment";
 import { FakeAppointmentRepository } from "../../tests/repositories/FakeAppointmentRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
 import { FakeServiceRepository } from "../../tests/repositories/FakeServiceRepository";
-import { FakeBalanceRepository } from "../../tests/repositories/FakeBalanceRepository";
 import { NoAuthorizationError } from "../errors/NoAuthorizationError";
 
-describe("AttendAppointment", () => {
+function makeSut() {
   const appointmentRepository = new FakeAppointmentRepository();
   const barberRepository = new FakeBarberRepository();
   const serviceRepository = new FakeServiceRepository();
-  const balanceRepository = new FakeBalanceRepository();
-  const paymentRepository = {
-    create: jest.fn().mockResolvedValue(undefined),
-  };
+  const sut = new AttendAppointment(appointmentRepository, barberRepository);
 
-  const sut = new AttendAppointment(
-    appointmentRepository,
-    barberRepository,
-    paymentRepository as any,
-    serviceRepository,
-    balanceRepository
-  );
+  return { sut, appointmentRepository, barberRepository, serviceRepository };
+}
 
-  beforeEach(() => {
-    paymentRepository.create.mockClear();
-  });
-
+describe("AttendAppointment", () => {
   it("deve lançar erro se o barbeiro não existir", async () => {
+    const { sut } = makeSut();
+
     await expect(sut.execute({ id: "appointment-1", userId: "non-existent" }))
       .rejects.toThrow(NoAuthorizationError);
   });
 
   it("deve lançar erro se o barbeiro não for o dono do agendamento", async () => {
-    const barber = await barberRepository.create({
+    const { sut, appointmentRepository, barberRepository, serviceRepository } = makeSut();
+    await barberRepository.create({
       userId: "barber-user-1",
       isAdmin: false,
     });
-
-    await balanceRepository.create({ barberId: barber.id });
 
     const service = await serviceRepository.create({
       name: "Corte",
@@ -56,13 +45,12 @@ describe("AttendAppointment", () => {
       .rejects.toThrow(NoAuthorizationError);
   });
 
-  it("deve atender agendamento marcado e criar pagamento", async () => {
+  it("deve atender agendamento marcado", async () => {
+    const { sut, appointmentRepository, barberRepository, serviceRepository } = makeSut();
     const barber = await barberRepository.create({
       userId: "barber-user-2",
       isAdmin: false,
     });
-
-    await balanceRepository.create({ barberId: barber.id });
 
     const service = await serviceRepository.create({
       name: "Barba",
@@ -81,19 +69,14 @@ describe("AttendAppointment", () => {
 
     const updated = await appointmentRepository.findById(appointment.id);
     expect(updated?.status).toBe("COMPLETED");
-    expect(paymentRepository.create).toHaveBeenCalledTimes(1);
-    expect(paymentRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 50 })
-    );
   });
 
   it("deve impedir atender agendamento que já foi concluído", async () => {
+    const { sut, appointmentRepository, barberRepository, serviceRepository } = makeSut();
     const barber = await barberRepository.create({
       userId: "barber-user-3",
       isAdmin: false,
     });
-
-    await balanceRepository.create({ barberId: barber.id });
 
     const service = await serviceRepository.create({
       name: "Corte + Barba",
@@ -112,7 +95,5 @@ describe("AttendAppointment", () => {
 
     await expect(sut.execute({ id: appointment.id, userId: "barber-user-3" }))
       .rejects.toThrow("Somente agendamentos marcados podem ser atendidos");
-
-    expect(paymentRepository.create).toHaveBeenCalledTimes(1);
   });
 });

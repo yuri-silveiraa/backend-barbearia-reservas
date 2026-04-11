@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS "Payment";
+DROP TABLE IF EXISTS "Balance";

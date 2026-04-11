@@ -1,15 +1,13 @@
 import { CreateBarber } from "./CreateBarber";
 import { FakeUsersRepository } from "../../tests/repositories/FakeUserRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
-import { FakeBalanceRepository } from "../../tests/repositories/FakeBalanceRepository";
 import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
 import bcrypt from "bcrypt";
 
 describe("CreateBarber", () => {
   const usersRepository = new FakeUsersRepository();
   const barberRepository = new FakeBarberRepository();
-  const balanceRepository = new FakeBalanceRepository();
-  const sut = new CreateBarber(usersRepository, barberRepository, balanceRepository);
+  const sut = new CreateBarber(usersRepository, barberRepository);
 
   it("deve criar um barbeiro com senha hasheada", async () => {
     const data = {
@@ -33,9 +31,6 @@ describe("CreateBarber", () => {
     const barber = await barberRepository.findByUserId(user.id);
     expect(barber).not.toBeNull();
     expect(barber?.isAdmin).toBe(false);
-
-    const balance = await balanceRepository.findByBarberId(barber!.id);
-    expect(balance).not.toBeNull();
   });
 
   it("deve criar um barbeiro admin quando isAdmin for true", async () => {

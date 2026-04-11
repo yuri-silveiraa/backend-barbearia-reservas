@@ -1,12 +1,12 @@
-import { ListBarberPaymentsByRangeController } from "./ListBarberPaymentsByRangeController";
+import { ListBarberAppointmentsByRangeController } from "./ListBarberAppointmentsByRangeController";
 import { mockRequest, mockResponse } from "../../../../tests/utils/MockExpress";
 
-describe("ListBarberPaymentsByRangeController", () => {
+describe("ListBarberAppointmentsByRangeController", () => {
   it("deve converter o período local de São Paulo para UTC antes de consultar", async () => {
     const useCase = {
-      execute: jest.fn().mockResolvedValue({ balance: 0, payments: [], services: [] }),
+      execute: jest.fn().mockResolvedValue([]),
     };
-    const controller = new ListBarberPaymentsByRangeController(useCase as any);
+    const controller = new ListBarberAppointmentsByRangeController(useCase as any);
     const req = mockRequest({
       user: { id: "user-1" },
       query: {
@@ -30,11 +30,11 @@ describe("ListBarberPaymentsByRangeController", () => {
     const useCase = {
       execute: jest.fn(),
     };
-    const controller = new ListBarberPaymentsByRangeController(useCase as any);
+    const controller = new ListBarberAppointmentsByRangeController(useCase as any);
     const req = mockRequest({
       user: { id: "user-1" },
       query: {
-        start: "data-invalida",
+        start: "10/04/2026",
         end: "2026-04-10",
       },
     });

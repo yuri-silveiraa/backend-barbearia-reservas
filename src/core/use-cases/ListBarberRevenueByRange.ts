@@ -1,14 +1,10 @@
 import { IBarbersRepository } from "../repositories/IBarberRepository";
-import { IBalanceRepository } from "../repositories/IBalanceRepository";
-import { IPaymentRepository } from "../repositories/IPaymentRepository";
 import { IAppointmentsRepository } from "../repositories/IAppointmentRepository";
 import { NoAuthorizationError } from "../errors/NoAuthorizationError";
 
-export class ListBarberPaymentsByRange {
+export class ListBarberRevenueByRange {
   constructor(
     private barberRepository: IBarbersRepository,
-    private balanceRepository: IBalanceRepository,
-    private paymentRepository: IPaymentRepository,
     private appointmentRepository: IAppointmentsRepository,
   ) {}
 
@@ -18,18 +14,20 @@ export class ListBarberPaymentsByRange {
       throw new NoAuthorizationError();
     }
 
-    const balance = await this.balanceRepository.findByBarberId(barber.id);
-    const balanceValue = balance?.balance ?? 0;
-
-    const payments = balance
-      ? await this.paymentRepository.findByBalanceIdRange(balance.id, startDate, endDate)
-      : [];
-
     const completedAppointments = await this.appointmentRepository.findCompletedByBarberIdRange(
       barber.id,
       startDate,
       endDate
     );
+
+    const totalRevenue = completedAppointments.reduce((total, item) => total + item.price, 0);
+    const appointments = completedAppointments.map((item) => ({
+      id: item.id,
+      serviceId: item.serviceId,
+      service: item.service,
+      amount: item.price,
+      completedAt: item.time,
+    }));
 
     const serviceMap = new Map<string, { serviceId: string; service: string; count: number; total: number }>();
     completedAppointments.forEach((item) => {
@@ -46,6 +44,6 @@ export class ListBarberPaymentsByRange {
 
     const services = Array.from(serviceMap.values()).sort((a, b) => b.total - a.total);
 
-    return { balance: balanceValue, payments, services };
+    return { totalRevenue, appointments, services };
   }
 }

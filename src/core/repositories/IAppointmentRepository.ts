@@ -2,8 +2,12 @@ import { AppointmentDTO } from '../dtos/AppointmentDTO';
 import { BarberCompletedAppointmentDTO } from '../dtos/BarberCompletedAppointmentDTO';
 import { Appointment } from '../entities/Appointment';
 
+export type CreateAppointmentRepositoryDTO = Omit<Appointment, 'id' | 'createdAt' | 'status' | 'price'> & {
+  price?: number;
+};
+
 export interface IAppointmentsRepository {
-  create(data: Omit<Appointment, 'id' | 'createdAt' | 'status'>): Promise<Appointment>;
+  create(data: CreateAppointmentRepositoryDTO): Promise<Appointment>;
   findByClientId(id: string): Promise<AppointmentDTO[] | null>;
   findById(id: string): Promise<AppointmentDTO | null>;
   findByBarberIdToday(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]>;

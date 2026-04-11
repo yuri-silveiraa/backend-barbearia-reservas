@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { ListBarberAppointmentsByRange } from "../../../../core/use-cases/ListBarberAppointmentsByRange";
+import { businessDayBoundary } from "../../../../core/utils/businessDate";
 import { AuthenticatedRequest } from "../../helpers/requestInterface";
 
 export class ListBarberAppointmentsByRangeController {
@@ -12,14 +13,15 @@ export class ListBarberAppointmentsByRangeController {
         return res.status(400).json({ message: "Período inválido" });
       }
 
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      const startDate = businessDayBoundary(start, "start");
+      const endDate = businessDayBoundary(end, "end");
+      if (!startDate || !endDate) {
         return res.status(400).json({ message: "Período inválido" });
       }
 
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(23, 59, 59, 999);
+      if (startDate > endDate) {
+        return res.status(400).json({ message: "Data inicial maior que data final" });
+      }
 
       const appointments = await this.listBarberAppointmentsByRange.execute(
         req.user.id,

@@ -22,7 +22,6 @@ const CLIENT_USERS_TOTAL = 30;
 const MIN_SERVICE_ROWS = 5;
 const MIN_TIME_ROWS = 700;
 const MIN_APPOINTMENT_ROWS = 300;
-const MIN_PAYMENT_ROWS = 300;
 const SEED_DAYS_WINDOW = 45;
 
 const firstNames = [
@@ -95,11 +94,9 @@ function getStatusForDayOffset(dayOffset: number) {
 
 async function clearDatabase() {
   await prisma.appointment.deleteMany();
-  await prisma.payment.deleteMany();
   await prisma.time.deleteMany();
   await prisma.service.deleteMany();
   await prisma.client.deleteMany();
-  await prisma.balance.deleteMany();
   await prisma.barber.deleteMany();
   await prisma.user.deleteMany();
 }
@@ -130,12 +127,6 @@ async function upsertBarberProfile(userId: string, isAdmin: boolean) {
     where: { userId },
     update: { isAdmin, isActive: true },
     create: { userId, isAdmin, isActive: true },
-  });
-
-  await prisma.balance.upsert({
-    where: { barberId: barber.id },
-    update: {},
-    create: { barberId: barber.id, balance: 0 },
   });
 }
 
@@ -298,6 +289,7 @@ async function seedAppointments(
         clientId: randomClient.id,
         serviceId: randomService.id,
         timeId: time.id,
+        price: randomService.price,
         status,
       },
     });
@@ -305,61 +297,6 @@ async function seedAppointments(
     await prisma.time.update({
       where: { id: time.id },
       data: { disponible: false },
-    });
-  }
-}
-
-async function seedPayments(total: number) {
-  const barbers = await prisma.barber.findMany({ include: { Balance: true } });
-  const balances = barbers
-    .map((barber) => barber.Balance)
-    .filter((balance): balance is NonNullable<typeof balance> => Boolean(balance));
-
-  if (!balances.length) return;
-
-  const totalsByBalance = new Map<string, number>();
-  for (const balance of balances) totalsByBalance.set(balance.id, 0);
-
-  const completedAppointments = await prisma.appointment.findMany({
-    where: { status: AppointmentStatus.COMPLETED },
-    select: {
-      barberId: true,
-      service: { select: { price: true } },
-      time: { select: { date: true } },
-    },
-    orderBy: { time: { date: "asc" } },
-  });
-
-  const balanceByBarberId = new Map(
-    barbers
-      .filter((barber) => barber.Balance)
-      .map((barber) => [barber.id, barber.Balance!])
-  );
-
-  for (let index = 0; index < total; index++) {
-    const appointment = completedAppointments[index % completedAppointments.length];
-    const balance = appointment ? balanceByBarberId.get(appointment.barberId) : balances[index % balances.length];
-    if (!balance) continue;
-
-    const amount = appointment?.service.price ?? randomInt(20, 120);
-    const fallbackDate = dateAtDayOffset(-randomInt(0, 90), randomInt(8, 21), randomFrom([0, 15, 30, 45]));
-    const createdAt = appointment?.time.date ?? fallbackDate;
-
-    await prisma.payment.create({
-      data: {
-        balanceId: balance.id,
-        amount,
-        createdAt,
-      },
-    });
-
-    totalsByBalance.set(balance.id, (totalsByBalance.get(balance.id) ?? 0) + amount);
-  }
-
-  for (const [balanceId, totalAmount] of totalsByBalance.entries()) {
-    await prisma.balance.update({
-      where: { id: balanceId },
-      data: { balance: totalAmount },
     });
   }
 }
@@ -407,7 +344,6 @@ async function main() {
 
   const createdTimes = await seedTimes(MIN_TIME_ROWS);
   await seedAppointments(MIN_APPOINTMENT_ROWS, createdTimes);
-  await seedPayments(MIN_PAYMENT_ROWS);
 
   const totals = await Promise.all([
     prisma.user.count(),
@@ -416,8 +352,6 @@ async function main() {
     prisma.service.count(),
     prisma.time.count(),
     prisma.appointment.count(),
-    prisma.balance.count(),
-    prisma.payment.count(),
   ]);
 
   console.log("Seed finalizado com sucesso.");
@@ -439,8 +373,6 @@ async function main() {
     { tabela: "Service", total: totals[3] },
     { tabela: "Time", total: totals[4] },
     { tabela: "Appointment", total: totals[5] },
-    { tabela: "Balance", total: totals[6] },
-    { tabela: "Payment", total: totals[7] },
   ]);
 }
 

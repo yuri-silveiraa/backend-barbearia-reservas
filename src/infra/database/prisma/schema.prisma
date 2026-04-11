@@ -42,7 +42,6 @@ model Barber {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   appointments Appointment[]
-  Balance   Balance?
   times     Time[]
 }
 
@@ -52,23 +51,6 @@ model Client {
   user      User     @relation("UserClient", fields: [userId], references: [id])
   createdAt DateTime @default(now())
   appointments Appointment[]
-}
-
-model Balance {
-  id        String   @id @default(uuid())
-  balance   Float    @default(0)
-  barberId  String   @unique
-  barber    Barber   @relation(fields: [barberId], references: [id])
-  atualizedAt DateTime @updatedAt
-  payments  Payment[]
-}
-
-model Payment {
-  id        String   @id @default(uuid())
-  amount    Float    
-  balanceId String
-  balance   Balance   @relation(fields: [balanceId], references: [id])
-  createdAt DateTime @default(now())
 }
 
 model Service {
@@ -98,6 +80,7 @@ model Appointment {
   clientId   String
   serviceId  String
   timeId     String
+  price      Float
   service    Service    @relation(fields: [serviceId], references: [id])
   client     Client     @relation(fields: [clientId], references: [id])
   barber     Barber     @relation(fields: [barberId], references: [id])

@@ -58,19 +58,6 @@ export class PrismaUsersRepository implements IUserRepository {
         await tx.time.deleteMany({
           where: { barberId: user.barber.id },
         });
-
-        const balance = await tx.balance.findUnique({
-          where: { barberId: user.barber.id },
-        });
-        if (balance) {
-          await tx.payment.deleteMany({
-            where: { balanceId: balance.id },
-          });
-          await tx.balance.delete({
-            where: { id: balance.id },
-          });
-        }
-
         await tx.barber.delete({
           where: { id: user.barber.id },
         });

@@ -33,6 +33,7 @@ services:
       PORT: 3000
       JWT_SECRET: supersecretkey
       DATABASE_URL: postgres://postgres:yuri1234@postgres:5432/barbearia
+      TZ: America/Sao_Paulo
     env_file:
       - .env
     ports:
@@ -40,7 +41,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npx prisma migrate deploy && npm run dev"
+    command: sh -c "npx prisma migrate deploy --schema=src/infra/database/prisma/schema.prisma && npm run dev"
     networks:
       - dev-network
 

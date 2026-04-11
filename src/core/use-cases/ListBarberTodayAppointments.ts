@@ -1,4 +1,5 @@
 import { AppointmentDTO } from "../dtos/AppointmentDTO";
+import { todayBusinessDayRange } from "../utils/businessDate";
 import { IAppointmentsRepository } from "../repositories/IAppointmentRepository";
 import { IBarbersRepository } from "../repositories/IBarberRepository";
 
@@ -14,11 +15,8 @@ export class ListBarberTodayAppointments {
       throw new Error("Barbeiro não encontrado");
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const { start, end } = todayBusinessDayRange();
 
-    return this.appointmentsRepository.findByBarberIdToday(barber.id, today, tomorrow);
+    return this.appointmentsRepository.findByBarberIdToday(barber.id, start, end);
   }
 }

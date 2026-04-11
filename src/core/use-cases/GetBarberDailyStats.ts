@@ -1,6 +1,6 @@
 import { IAppointmentsRepository } from "../repositories/IAppointmentRepository";
 import { IBarbersRepository } from "../repositories/IBarberRepository";
-import { IBalanceRepository } from "../repositories/IBalanceRepository";
+import { todayBusinessDayRange } from "../utils/businessDate";
 
 export interface BarberDailyStats {
   completedCount: number;
@@ -12,7 +12,6 @@ export class GetBarberDailyStats {
   constructor(
     private appointmentsRepository: IAppointmentsRepository,
     private barberRepository: IBarbersRepository,
-    private balanceRepository: IBalanceRepository,
   ) {}
 
   async execute(userId: string): Promise<BarberDailyStats> {
@@ -21,23 +20,19 @@ export class GetBarberDailyStats {
       throw new Error("Barbeiro não encontrado");
     }
 
-    const today = new Date();
-    const completedCount = await this.appointmentsRepository.countCompletedByBarberToday(barber.id, today);
-    
-    const balance = await this.balanceRepository.findByBarberId(barber.id);
+    const { start, end } = todayBusinessDayRange();
 
-    const startOfDay = new Date(today);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(today);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const appointments = await this.appointmentsRepository.findByBarberIdToday(barber.id, startOfDay, endOfDay);
-    const scheduledCount = appointments.filter(a => a.status === 'SCHEDULED').length;
+    const appointments = await this.appointmentsRepository.findByBarberIdToday(barber.id, start, end);
+    const completedAppointments = await this.appointmentsRepository.findCompletedByBarberIdRange(
+      barber.id,
+      start,
+      end
+    );
 
     return {
-      completedCount,
-      scheduledCount,
-      totalRevenue: balance?.balance || 0,
+      completedCount: completedAppointments.length,
+      scheduledCount: appointments.filter((appointment) => appointment.status === "SCHEDULED").length,
+      totalRevenue: completedAppointments.reduce((total, appointment) => total + appointment.price, 0),
     };
   }
 }
