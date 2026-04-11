@@ -15,6 +15,8 @@ describe("ListService", () => {
       name: "Corte Tradicional",
       description: "Corte masculino tradicional",
       price: 35,
+      imageData: Buffer.from("fake-image"),
+      imageMimeType: "image/jpeg",
     });
 
     await serviceRepository.create({
@@ -28,6 +30,7 @@ describe("ListService", () => {
     expect(services.length).toBe(2);
     expect(services[0].name).toBe("Corte Tradicional");
     expect(services[0].description).toBe("Corte masculino tradicional");
+    expect(services[0].imageUrl).toMatch(/^\/api\/service\/1\/image\?v=\d+$/);
     expect(services[1].description).toBe("Sem descrição");
   });
 });

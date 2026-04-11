@@ -10,6 +10,8 @@ export class FakeServiceRepository implements IServiceRepository {
       name: data.name,
       description: data.description,
       price: data.price,
+      imageData: data.imageData,
+      imageMimeType: data.imageMimeType,
       active: data.active ?? true,
     };
     this.services.push(service);

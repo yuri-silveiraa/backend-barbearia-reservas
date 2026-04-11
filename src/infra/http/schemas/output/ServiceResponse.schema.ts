@@ -6,10 +6,12 @@ export const ServiceResponseSchema = z.array(
     name: z.string(),
     price: z.number(),
     description: z.string().optional(),
+    imageUrl: z.string().nullable().optional(),
   }).transform((service) => ({
     id: service.id,
     nome: service.name,
     preço: service.price.toFixed(2),
     descrição: service.description? service.description : "Sem descrição",
+    imagemUrl: service.imageUrl ?? null,
   }))
 );

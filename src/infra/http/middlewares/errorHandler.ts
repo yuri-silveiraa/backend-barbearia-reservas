@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../../core/errors/AppError";
 
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+  if (err.name === "PayloadTooLargeError") {
+    return res.status(413).json({ message: "Imagem muito grande. Envie uma imagem de até 5MB." });
+  }
+
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({ message: err.message });
   }

@@ -9,6 +9,8 @@ export class PrismaServiceRepository implements IServiceRepository {
         name: data.name,
         price: data.price,
         description: data.description,
+        imageData: data.imageData,
+        imageMimeType: data.imageMimeType,
       },
     });
     return service;
@@ -42,6 +44,8 @@ export class PrismaServiceRepository implements IServiceRepository {
         ...(data.name && { name: data.name }),
         ...(data.price !== undefined && { price: data.price }),
         ...(data.description !== undefined && { description: data.description }),
+        ...(data.imageData !== undefined && { imageData: data.imageData }),
+        ...(data.imageMimeType !== undefined && { imageMimeType: data.imageMimeType }),
       },
     });
     return service;

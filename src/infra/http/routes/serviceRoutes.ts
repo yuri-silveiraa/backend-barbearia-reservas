@@ -12,6 +12,7 @@ import { ListService } from "../../../core/use-cases/ListService";
 import { ListServiceController } from "../controllers/services/ListServiceController";
 import { UpdateServiceController } from "../controllers/services/UpdateServiceController";
 import { UpdateService } from "../../../core/use-cases/UpdateService";
+import { GetServiceImageController } from "../controllers/services/GetServiceImageController";
 
 Router();
 
@@ -25,6 +26,7 @@ const updateService = new UpdateService(serviceRepo);
 const createServiceController = new CreateServiceController(createService);
 const listServiceController = new ListServiceController(listService);
 const updateServiceController = new UpdateServiceController(updateService);
+const getServiceImageController = new GetServiceImageController(serviceRepo);
 
 serviceRoutes.post(
   "/create",
@@ -37,6 +39,11 @@ serviceRoutes.post(
 serviceRoutes.get(
   "/",
   (req, res) => listServiceController.handle(res)
+);
+
+serviceRoutes.get(
+  "/:id/image",
+  (req, res) => getServiceImageController.handle(req, res)
 );
 
 serviceRoutes.put(

@@ -76,6 +76,8 @@ model Service {
   name        String
   description String?
   price       Float
+  imageData   Bytes?
+  imageMimeType String?
   active      Boolean  @default(true)
   appointments Appointment[]
 }
