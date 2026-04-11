@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { z } from "zod";
+import { DateTime } from "luxon";
 import { AuthenticatedRequest } from "../../helpers/requestInterface";
 import { ListBarberPaymentsByRange } from "../../../../core/use-cases/ListBarberPaymentsByRange";
 
@@ -8,14 +9,20 @@ const QuerySchema = z.object({
   end: z.string().min(1),
 });
 
-function toStartOfDay(value: string): Date {
-  const date = new Date(`${value}T00:00:00`);
-  return date;
-}
+const BUSINESS_TIMEZONE = "America/Sao_Paulo";
 
-function toEndOfDay(value: string): Date {
-  const date = new Date(`${value}T23:59:59.999`);
-  return date;
+function toBusinessDayBoundary(value: string, boundary: "start" | "end"): Date | null {
+  const parsed = DateTime.fromISO(value, { zone: BUSINESS_TIMEZONE });
+
+  if (!parsed.isValid) {
+    return null;
+  }
+
+  const localBoundary = boundary === "start"
+    ? parsed.startOf("day")
+    : parsed.endOf("day");
+
+  return localBoundary.toUTC().toJSDate();
 }
 
 export class ListBarberPaymentsByRangeController {
@@ -23,10 +30,10 @@ export class ListBarberPaymentsByRangeController {
 
   async handle(req: AuthenticatedRequest, res: Response): Promise<Response> {
     const { start, end } = QuerySchema.parse(req.query);
-    const startDate = toStartOfDay(start);
-    const endDate = toEndOfDay(end);
+    const startDate = toBusinessDayBoundary(start, "start");
+    const endDate = toBusinessDayBoundary(end, "end");
 
-    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    if (!startDate || !endDate) {
       return res.status(400).json({ message: "Período inválido" });
     }
 
