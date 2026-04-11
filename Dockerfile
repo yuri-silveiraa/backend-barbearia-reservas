@@ -2,7 +2,9 @@ FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y \
+  && apt-get install -y openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -17,16 +19,20 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y \
+  && apt-get install -y openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-RUN npm ci --include=dev
+RUN npm ci
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src/infra/database/prisma ./src/infra/database/prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
-RUN npx prisma generate --schema=src/infra/database/prisma/schema.prisma
+COPY docker/entrypoint.sh ./entrypoint.sh
+
+RUN chmod +x ./entrypoint.sh
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["./entrypoint.sh"]
