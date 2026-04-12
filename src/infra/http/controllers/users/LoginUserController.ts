@@ -3,7 +3,7 @@ import { AuthenticateUser } from '../../../../core/use-cases/AuthenticateUser';
 import { User } from '../../../../core/entities/User';
 import { sign } from 'jsonwebtoken';
 import { env } from '../../../../config/env';
-import { getAuthCookieOptions } from '../../helpers/authCookie';
+import { AUTH_TOKEN_EXPIRES_IN, getAuthCookieOptions } from '../../helpers/authCookie';
 import { prisma } from '../../../database/prisma/prismaClient';
 
 export class LoginUserController {
@@ -15,7 +15,7 @@ export class LoginUserController {
       return res.status(401).json({ message: 'Credenciais inválidas' });
     }
 
-    const token = sign({ userId: user.id }, env.jwtSecret, { expiresIn: '1d' });
+    const token = sign({ userId: user.id }, env.jwtSecret, { expiresIn: AUTH_TOKEN_EXPIRES_IN });
 
     res.cookie('token', token, getAuthCookieOptions(req));
 

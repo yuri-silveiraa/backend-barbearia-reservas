@@ -4,7 +4,7 @@ import { PrismaUsersRepository } from '../../../database/repositories/PrismaUser
 import { User } from '../../../../core/entities/User';
 import { sign } from 'jsonwebtoken';
 import { env } from '../../../../config/env';
-import { getAuthCookieOptions } from '../../helpers/authCookie';
+import { AUTH_TOKEN_EXPIRES_IN, getAuthCookieOptions } from '../../helpers/authCookie';
 import { OAuth2Client } from 'google-auth-library';
 
 export class GoogleAuthController {
@@ -49,7 +49,7 @@ export class GoogleAuthController {
 
       const user = await this.authenticateWithGoogle.execute(payload);
 
-      const token = sign({ userId: user.id }, env.jwtSecret, { expiresIn: '1d' });
+      const token = sign({ userId: user.id }, env.jwtSecret, { expiresIn: AUTH_TOKEN_EXPIRES_IN });
 
       res.cookie('token', token, getAuthCookieOptions(req));
 

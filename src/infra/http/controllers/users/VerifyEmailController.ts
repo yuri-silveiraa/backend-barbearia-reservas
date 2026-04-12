@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { sign } from "jsonwebtoken";
 import { VerifyEmail } from "../../../../core/use-cases/VerifyEmail";
 import { env } from "../../../../config/env";
-import { getAuthCookieOptions } from "../../helpers/authCookie";
+import { AUTH_TOKEN_EXPIRES_IN, getAuthCookieOptions } from "../../helpers/authCookie";
 import { PrismaUsersRepository } from "../../../database/repositories/PrismaUsersRepository";
 
 export class VerifyEmailController {
@@ -27,7 +27,7 @@ export class VerifyEmailController {
         return res.status(500).json({ message: "Erro ao verificar email" });
       }
 
-      const token = sign({ userId }, env.jwtSecret, { expiresIn: "1d" });
+      const token = sign({ userId }, env.jwtSecret, { expiresIn: AUTH_TOKEN_EXPIRES_IN });
       res.cookie("token", token, getAuthCookieOptions(req));
 
       const usersRepository = new PrismaUsersRepository();

@@ -1,5 +1,8 @@
 import { CookieOptions, Request } from "express";
 
+export const AUTH_TOKEN_EXPIRES_IN = "180d";
+export const AUTH_COOKIE_MAX_AGE_MS = 180 * 24 * 60 * 60 * 1000;
+
 function isHttpsRequest(req: Request): boolean {
   const forwardedProto = req.headers["x-forwarded-proto"];
 
@@ -34,7 +37,7 @@ export function getAuthCookieOptions(req: Request): CookieOptions {
     httpOnly: true,
     secure,
     sameSite,
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: AUTH_COOKIE_MAX_AGE_MS,
     path: "/",
   };
 }
