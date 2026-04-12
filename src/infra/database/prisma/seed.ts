@@ -24,6 +24,24 @@ const MIN_TIME_ROWS = 700;
 const MIN_APPOINTMENT_ROWS = 300;
 const SEED_DAYS_WINDOW = 45;
 
+const serviceImages = {
+  scissors: Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#071f1c"/><stop offset="1" stop-color="#00c2a8"/></linearGradient></defs><rect width="960" height="540" fill="url(#g)"/><circle cx="740" cy="130" r="170" fill="#f3c76b" opacity=".22"/><path d="M284 184l160 156M444 184L284 340" stroke="#f7f0dc" stroke-width="34" stroke-linecap="round"/><circle cx="245" cy="151" r="54" fill="none" stroke="#f7f0dc" stroke-width="28"/><circle cx="245" cy="373" r="54" fill="none" stroke="#f7f0dc" stroke-width="28"/><text x="80" y="465" fill="#f7f0dc" font-family="Arial" font-size="58" font-weight="700">Corte</text></svg>`
+  ),
+  beard: Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#151515"/><stop offset="1" stop-color="#5c3b22"/></linearGradient></defs><rect width="960" height="540" fill="url(#g)"/><path d="M480 120c116 0 210 86 210 192 0 104-89 174-210 174s-210-70-210-174c0-106 94-192 210-192z" fill="#f3c76b" opacity=".24"/><path d="M330 260c64 96 236 96 300 0 4 128-72 204-150 204s-154-76-150-204z" fill="#f7f0dc"/><text x="80" y="465" fill="#f7f0dc" font-family="Arial" font-size="58" font-weight="700">Barba</text></svg>`
+  ),
+  combo: Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#061615"/><stop offset=".55" stop-color="#102f2b"/><stop offset="1" stop-color="#d5a94f"/></linearGradient></defs><rect width="960" height="540" fill="url(#g)"/><path d="M220 300h520" stroke="#f7f0dc" stroke-width="30" stroke-linecap="round"/><path d="M300 185l135 150M435 185L300 335" stroke="#00c2a8" stroke-width="28" stroke-linecap="round"/><path d="M600 180c65 0 118 48 118 108s-50 100-118 100-118-40-118-100 53-108 118-108z" fill="#f7f0dc" opacity=".92"/><text x="80" y="465" fill="#f7f0dc" font-family="Arial" font-size="58" font-weight="700">Corte + Barba</text></svg>`
+  ),
+  pigment: Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#0e1014"/><stop offset="1" stop-color="#253b6d"/></linearGradient></defs><rect width="960" height="540" fill="url(#g)"/><rect x="170" y="120" width="620" height="250" rx="50" fill="#f7f0dc" opacity=".12"/><path d="M260 350c120-170 300-170 440 0" fill="none" stroke="#f7f0dc" stroke-width="38" stroke-linecap="round"/><path d="M290 320c110-96 265-96 380 0" fill="none" stroke="#00c2a8" stroke-width="22" stroke-linecap="round"/><text x="80" y="465" fill="#f7f0dc" font-family="Arial" font-size="58" font-weight="700">Pigmentacao</text></svg>`
+  ),
+  eyebrow: Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#151515"/><stop offset="1" stop-color="#06453d"/></linearGradient></defs><rect width="960" height="540" fill="url(#g)"/><path d="M225 265c115-90 220-90 330 0M570 265c60-50 118-50 175 0" fill="none" stroke="#f7f0dc" stroke-width="34" stroke-linecap="round"/><circle cx="390" cy="320" r="34" fill="#00c2a8"/><circle cx="670" cy="320" r="34" fill="#00c2a8"/><text x="80" y="465" fill="#f7f0dc" font-family="Arial" font-size="58" font-weight="700">Sobrancelha</text></svg>`
+  ),
+};
+
 const firstNames = [
   "Ana",
   "Bruno",
@@ -96,6 +114,7 @@ async function clearDatabase() {
   await prisma.appointment.deleteMany();
   await prisma.time.deleteMany();
   await prisma.service.deleteMany();
+  await prisma.customer.deleteMany();
   await prisma.client.deleteMany();
   await prisma.barber.deleteMany();
   await prisma.user.deleteMany();
@@ -131,11 +150,20 @@ async function upsertBarberProfile(userId: string, isAdmin: boolean) {
 }
 
 async function upsertClientProfile(userId: string) {
-  await prisma.client.upsert({
+  const client = await prisma.client.upsert({
     where: { userId },
     update: {},
     create: { userId },
   });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (user) {
+    await prisma.customer.upsert({
+      where: { whatsapp: user.telephone },
+      update: { name: user.name, userId: user.id },
+      create: { name: user.name, whatsapp: user.telephone, userId: user.id },
+    });
+  }
+  return client;
 }
 
 async function ensureService(name: string, description: string, price: number) {
@@ -150,6 +178,8 @@ async function ensureService(name: string, description: string, price: number) {
       name,
       description,
       price,
+      imageData: serviceImages.scissors,
+      imageMimeType: "image/svg+xml",
       active: true,
     },
   });
@@ -188,31 +218,43 @@ async function seedServices(total: number) {
       name: "Corte Tradicional",
       description: "Corte masculino tradicional",
       price: 200,
+      imageData: serviceImages.scissors,
     },
     {
       name: "Barba Completa",
       description: "Modelagem e acabamento da barba",
       price: 200,
+      imageData: serviceImages.beard,
     },
     {
       name: "Corte + Barba",
       description: "Pacote completo",
       price: 200,
+      imageData: serviceImages.combo,
     },
     {
       name: "Pigmentacao",
       description: "Pigmentacao de barba/cabelo",
       price: 200,
+      imageData: serviceImages.pigment,
     },
     {
       name: "Sobrancelha",
       description: "Ajuste de sobrancelha",
       price: 200,
+      imageData: serviceImages.eyebrow,
     },
   ];
 
   for (const service of baseServices) {
-    await ensureService(service.name, service.description, service.price);
+    const existing = await ensureService(service.name, service.description, service.price);
+    await prisma.service.update({
+      where: { id: existing.id },
+      data: {
+        imageData: service.imageData,
+        imageMimeType: "image/svg+xml",
+      },
+    });
   }
 }
 
@@ -252,8 +294,9 @@ async function seedAppointments(
   total: number,
   createdTimes: Array<{ id: string; barberId: string; date: Date }>
 ) {
-  const clients = await prisma.client.findMany();
+  const clients = await prisma.client.findMany({ include: { user: { include: { customer: true } } } });
   const services = await prisma.service.findMany();
+  const barbers = await prisma.barber.findMany({ include: { user: true } });
 
   if (!createdTimes.length || !clients.length || !services.length) return;
 
@@ -278,6 +321,8 @@ async function seedAppointments(
 
     const randomClient = randomFrom(clients);
     const randomService = randomFrom(services);
+    const barber = barbers.find((item) => item.id === time.barberId);
+    if (!randomClient.user.customer || !barber) continue;
     const dayOffset = Math.round(
       (time.date.getTime() - dateAtDayOffset(0, 0).getTime()) / (24 * 60 * 60 * 1000)
     );
@@ -287,9 +332,15 @@ async function seedAppointments(
       data: {
         barberId: time.barberId,
         clientId: randomClient.id,
+        customerId: randomClient.user.customer.id,
         serviceId: randomService.id,
         timeId: time.id,
         price: randomService.price,
+        customerName: randomClient.user.customer.name,
+        customerWhatsapp: randomClient.user.customer.whatsapp,
+        barberName: barber.user.name,
+        serviceName: randomService.name,
+        scheduledAt: time.date,
         status,
       },
     });
@@ -340,6 +391,22 @@ async function main() {
 
   const randomUsers = await createClientUsers(CLIENT_USERS_TOTAL);
 
+  const client = await upsertUser({
+    name: "Yuri Cliente",
+    email: "cliente@barbearia.local",
+    password: "Cliente@123",
+    type: UserType.CLIENT,
+    telephone: "11977777777",
+  });
+
+  await upsertClientProfile(client.id);
+
+  knownUsers.push({
+    role: "CLIENT",
+    email: "cliente@barbearia.local",
+    password: "Cliente@123",
+  });
+
   await seedServices(MIN_SERVICE_ROWS);
 
   const createdTimes = await seedTimes(MIN_TIME_ROWS);
@@ -349,6 +416,7 @@ async function main() {
     prisma.user.count(),
     prisma.barber.count(),
     prisma.client.count(),
+    prisma.customer.count(),
     prisma.service.count(),
     prisma.time.count(),
     prisma.appointment.count(),
@@ -370,9 +438,10 @@ async function main() {
     { tabela: "User", total: totals[0] },
     { tabela: "Barber", total: totals[1] },
     { tabela: "Client", total: totals[2] },
-    { tabela: "Service", total: totals[3] },
-    { tabela: "Time", total: totals[4] },
-    { tabela: "Appointment", total: totals[5] },
+    { tabela: "Customer", total: totals[3] },
+    { tabela: "Service", total: totals[4] },
+    { tabela: "Time", total: totals[5] },
+    { tabela: "Appointment", total: totals[6] },
   ]);
 }
 

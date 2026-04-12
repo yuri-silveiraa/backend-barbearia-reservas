@@ -6,12 +6,19 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
   private appointments: Appointment[] = [];
 
   async create(data: CreateAppointmentRepositoryDTO): Promise<Appointment> {
+    const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const appointment: Appointment = {
       id: String(this.appointments.length + 1),
       barberId: data.barberId,
-      clientId: data.clientId,
+      clientId: data.clientId ?? null,
+      customerId: data.customerId ?? data.clientId ?? String(this.appointments.length + 1),
+      customerName: "Client Name",
+      customerWhatsapp: "11912345678",
+      barberName: "Barber Name",
       serviceId: data.serviceId,
+      serviceName: "Service Name",
       timeId: data.timeId,
+      scheduledAt,
       price: data.price ?? 0,
       status: "SCHEDULED",
       createdAt: new Date(),
@@ -21,8 +28,11 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
   }
 
   async findByClientId(id: string): Promise<AppointmentDTO[] | null> {
-    const appointments = this.appointments.filter(a => a.clientId === id);
-    return appointments.map(a => this.toDTO(a));
+    return this.appointments.filter(a => a.clientId === id).map(a => this.toDTO(a));
+  }
+
+  async findByCustomerId(id: string): Promise<AppointmentDTO[] | null> {
+    return this.appointments.filter(a => a.customerId === id).map(a => this.toDTO(a));
   }
 
   async findById(id: string): Promise<AppointmentDTO | null> {
@@ -31,28 +41,23 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
   }
 
   async findByBarberIdToday(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]> {
-    const appointments = this.appointments.filter(
-      a => a.barberId === barberId
-    );
-    return appointments.map(a => this.toDTO(a));
+    return this.appointments.filter(a => a.barberId === barberId).map(a => this.toDTO(a));
   }
 
   async findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]> {
-    const appointments = this.appointments.filter(a => a.barberId === barberId);
-    return appointments.map(a => this.toDTO(a));
+    return this.appointments.filter(a => a.barberId === barberId).map(a => this.toDTO(a));
   }
 
   async findCompletedByBarberIdRange(barberId: string, startDate: Date, endDate: Date) {
-    const appointments = this.appointments.filter(
-      a => a.barberId === barberId && a.status === "COMPLETED"
-    );
-    return appointments.map(a => ({
-      id: a.id,
-      serviceId: a.serviceId,
-      service: "Service Name",
-      price: a.price,
-      time: a.createdAt,
-    }));
+    return this.appointments
+      .filter(a => a.barberId === barberId && a.status === "COMPLETED")
+      .map(a => ({
+        id: a.id,
+        serviceId: a.serviceId,
+        service: a.serviceName,
+        price: a.price,
+        time: a.scheduledAt,
+      }));
   }
 
   async countByClientSince(clientId: string, since: Date): Promise<number> {
@@ -70,8 +75,8 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
     return this.appointments.filter(
       a => a.barberId === barberId &&
            a.status === "COMPLETED" &&
-           a.createdAt >= startOfDay &&
-           a.createdAt <= endOfDay
+           a.scheduledAt >= startOfDay &&
+           a.scheduledAt <= endOfDay
     ).length;
   }
 
@@ -95,13 +100,15 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
     return {
       id: appointment.id,
       clientId: appointment.clientId,
+      customerId: appointment.customerId,
       barberId: appointment.barberId,
       serviceId: appointment.serviceId,
       timeId: appointment.timeId,
-      client: "Client Name",
-      barber: "Barber Name",
-      service: "Service Name",
-      time: new Date(),
+      client: appointment.customerName,
+      clientTelephone: appointment.customerWhatsapp,
+      barber: appointment.barberName,
+      service: appointment.serviceName,
+      time: appointment.scheduledAt,
       price: appointment.price,
       status: appointment.status,
     };

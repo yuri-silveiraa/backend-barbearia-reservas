@@ -3,12 +3,22 @@ import { FakeAppointmentRepository } from "../../tests/repositories/FakeAppointm
 import { FakeClientRepository } from "../../tests/repositories/FakeClientRepository";
 import { ClientScheduleSpacingError } from "../errors/ClientScheduleSpacingError";
 import { FakeTimeRepository } from "../../tests/repositories/FakeTimeRepository";
+import { FakeCustomerRepository } from "../../tests/repositories/FakeCustomerRepository";
 
 describe("CreateAppointment", () => {
-  const appointmentRepository = new FakeAppointmentRepository();
-  const clientRepository = new FakeClientRepository();
-  const timeRepository = new FakeTimeRepository();
-  const sut = new CreateAppointment(appointmentRepository, clientRepository, timeRepository);
+  let appointmentRepository: FakeAppointmentRepository;
+  let clientRepository: FakeClientRepository;
+  let timeRepository: FakeTimeRepository;
+  let customerRepository: FakeCustomerRepository;
+  let sut: CreateAppointment;
+
+  beforeEach(() => {
+    appointmentRepository = new FakeAppointmentRepository();
+    clientRepository = new FakeClientRepository();
+    timeRepository = new FakeTimeRepository();
+    customerRepository = new FakeCustomerRepository();
+    sut = new CreateAppointment(appointmentRepository, clientRepository, timeRepository, customerRepository);
+  });
 
   it("deve criar um agendamento com sucesso", async () => {
     await clientRepository.create({

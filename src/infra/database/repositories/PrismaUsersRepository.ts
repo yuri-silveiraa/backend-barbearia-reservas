@@ -43,8 +43,9 @@ export class PrismaUsersRepository implements IUserRepository {
 
     await prisma.$transaction(async (tx) => {
       if (user.client) {
-        await tx.appointment.deleteMany({
+        await tx.appointment.updateMany({
           where: { clientId: user.client.id },
+          data: { clientId: null },
         });
         await tx.client.delete({
           where: { id: user.client.id },
@@ -52,19 +53,29 @@ export class PrismaUsersRepository implements IUserRepository {
       }
 
       if (user.barber) {
-        await tx.appointment.deleteMany({
-          where: { barberId: user.barber.id },
+        await tx.barber.update({
+          where: { id: user.barber.id },
+          data: { isActive: false },
         });
         await tx.time.deleteMany({
-          where: { barberId: user.barber.id },
-        });
-        await tx.barber.delete({
-          where: { id: user.barber.id },
+          where: { barberId: user.barber.id, appointments: { none: {} } },
         });
       }
 
-      await tx.user.delete({
+      await tx.user.update({
         where: { id },
+        data: {
+          name: "Usuario excluido",
+          email: `deleted+${id}@example.invalid`,
+          telephone: "REMOVIDO",
+          password: null,
+          provider: null,
+          providerId: null,
+          emailVerified: false,
+          emailCode: null,
+          emailCodeExpires: null,
+          emailCodeCooldownExpires: null,
+        },
       });
     });
   }

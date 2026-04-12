@@ -6,15 +6,25 @@ import { prisma } from "../prisma/prismaClient";
 
 export class PrismaAppointmentRepository implements IAppointmentsRepository {
   async create(data: CreateAppointmentRepositoryDTO): Promise<Appointment> {
-    return await prisma.$transaction(async (tx) => {
-      const service = await tx.service.findUnique({
-        where: { id: data.serviceId },
-        select: { price: true },
-      });
+    if (!data.customerId) {
+      throw new AppError("Cliente do agendamento não informado", 400);
+    }
 
-      if (!service) {
-        throw new AppError("Serviço não encontrado", 404);
-      }
+    return await prisma.$transaction(async (tx) => {
+      const [customer, service, barber, time] = await Promise.all([
+        tx.customer.findUnique({ where: { id: data.customerId } }),
+        tx.service.findUnique({ where: { id: data.serviceId } }),
+        tx.barber.findUnique({
+          where: { id: data.barberId },
+          include: { user: { select: { name: true } } },
+        }),
+        tx.time.findUnique({ where: { id: data.timeId } }),
+      ]);
+
+      if (!customer) throw new AppError("Cliente não encontrado", 404);
+      if (!service) throw new AppError("Serviço não encontrado", 404);
+      if (!barber) throw new AppError("Barbeiro não encontrado", 404);
+      if (!time) throw new AppError("Horário não encontrado", 404);
 
       const reservedTime = await tx.time.updateMany({
         where: {
@@ -34,10 +44,16 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
       return await tx.appointment.create({
         data: {
           barberId: data.barberId,
-          clientId: data.clientId,
+          clientId: data.clientId ?? null,
+          customerId: data.customerId,
           serviceId: data.serviceId,
           timeId: data.timeId,
           price: service.price,
+          customerName: customer.name,
+          customerWhatsapp: customer.whatsapp,
+          barberName: barber.user.name,
+          serviceName: service.name,
+          scheduledAt: time.date,
         },
       });
     });
@@ -47,9 +63,17 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     const appointments = await prisma.appointment.findMany({
       where: { clientId },
       select: appointmentSelect,
-      orderBy: {
-        time: { date: "asc" },
-      },
+      orderBy: { scheduledAt: "asc" },
+    });
+
+    return appointments.map(toAppointmentDTO);
+  }
+
+  async findByCustomerId(customerId: string): Promise<AppointmentDTO[]> {
+    const appointments = await prisma.appointment.findMany({
+      where: { customerId },
+      select: appointmentSelect,
+      orderBy: { scheduledAt: "asc" },
     });
 
     return appointments.map(toAppointmentDTO);
@@ -60,19 +84,14 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
       where: {
         clientId,
         status: "SCHEDULED",
-        createdAt: {
-          gte: since,
-        },
+        createdAt: { gte: since },
       },
     });
   }
 
   async attend(id: string): Promise<boolean> {
     const updated = await prisma.appointment.updateMany({
-      where: {
-        id,
-        status: "SCHEDULED",
-      },
+      where: { id, status: "SCHEDULED" },
       data: { status: "COMPLETED" },
     });
 
@@ -90,17 +109,10 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     const appointments = await prisma.appointment.findMany({
       where: {
         barberId,
-        time: {
-          date: {
-            gte: startDate,
-            lt: endDate,
-          },
-        },
+        scheduledAt: { gte: startDate, lt: endDate },
       },
       select: appointmentSelect,
-      orderBy: {
-        time: { date: "asc" },
-      },
+      orderBy: { scheduledAt: "asc" },
     });
 
     return appointments.map(toAppointmentDTO);
@@ -110,17 +122,10 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     const appointments = await prisma.appointment.findMany({
       where: {
         barberId,
-        time: {
-          date: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
+        scheduledAt: { gte: startDate, lte: endDate },
       },
       select: appointmentSelect,
-      orderBy: {
-        time: { date: "asc" },
-      },
+      orderBy: { scheduledAt: "asc" },
     });
 
     return appointments.map(toAppointmentDTO);
@@ -135,31 +140,24 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
       where: {
         barberId,
         status: "COMPLETED",
-        time: {
-          date: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
+        scheduledAt: { gte: startDate, lte: endDate },
       },
       select: {
         id: true,
         serviceId: true,
+        serviceName: true,
         price: true,
-        service: { select: { name: true } },
-        time: { select: { date: true } },
+        scheduledAt: true,
       },
-      orderBy: {
-        time: { date: "asc" },
-      },
+      orderBy: { scheduledAt: "asc" },
     });
 
     return appointments.map((appointment) => ({
       id: appointment.id,
       serviceId: appointment.serviceId,
-      service: appointment.service.name,
+      service: appointment.serviceName,
       price: appointment.price,
-      time: appointment.time.date,
+      time: appointment.scheduledAt,
     }));
   }
 
@@ -173,10 +171,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
       where: {
         barberId,
         status: "COMPLETED",
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        scheduledAt: { gte: startOfDay, lte: endOfDay },
       },
     });
   }
@@ -195,48 +190,45 @@ const appointmentSelect = {
   id: true,
   status: true,
   clientId: true,
+  customerId: true,
   barberId: true,
   serviceId: true,
   timeId: true,
   price: true,
-  client: {
-    select: { user: { select: { name: true, telephone: true } } },
-  },
-  barber: {
-    select: { user: { select: { name: true } } },
-  },
-  service: {
-    select: { name: true },
-  },
-  time: {
-    select: { date: true },
-  },
+  customerName: true,
+  customerWhatsapp: true,
+  barberName: true,
+  serviceName: true,
+  scheduledAt: true,
 } as const;
 
 function toAppointmentDTO(appointment: {
   id: string;
   status: string;
-  clientId: string;
+  clientId: string | null;
+  customerId: string;
   barberId: string;
   serviceId: string;
   timeId: string;
   price: number;
-  client: { user: { name: string; telephone?: string } };
-  barber: { user: { name: string } };
-  service: { name: string };
-  time: { date: Date };
+  customerName: string;
+  customerWhatsapp: string;
+  barberName: string;
+  serviceName: string;
+  scheduledAt: Date;
 }): AppointmentDTO {
   return {
     id: appointment.id,
     clientId: appointment.clientId,
+    customerId: appointment.customerId,
     barberId: appointment.barberId,
     serviceId: appointment.serviceId,
-    client: appointment.client.user.name,
-    clientTelephone: appointment.client.user.telephone,
-    barber: appointment.barber.user.name,
-    service: appointment.service.name,
+    client: appointment.customerName,
+    clientTelephone: appointment.customerWhatsapp,
+    barber: appointment.barberName,
+    service: appointment.serviceName,
     timeId: appointment.timeId,
-    time: appointment.time.date,
+    time: appointment.scheduledAt,
     price: appointment.price,
     status: appointment.status,
   };

@@ -9,6 +9,7 @@ import { CreateAppointmentSchema } from "../schemas/input/CreateAppointment.sche
 import { ListClientAppointmentsController } from "../controllers/appointments/ListClientAppointmentsController";
 import { ListClientAppointments } from "../../../core/use-cases/ListClientAppointments";
 import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
+import { PrismaCustomerRepository } from "../../database/repositories/PrismaCustomerRepository";
 import { AuthenticatedRequest } from "../helpers/requestInterface";
 import { PrismaBarberRepository } from "../../database/repositories/PrismaBarberReposiry";
 import { AttendAppointment } from "../../../core/use-cases/AttendAppointment";
@@ -21,8 +22,9 @@ const appointmentRoute = Router();
 const appointmentRepo = new PrismaAppointmentRepository();
 const clientRepository = new PrismaClientRepository();
 const timeRepo = new PrismaTimeRepository();
+const customerRepo = new PrismaCustomerRepository();
 const barberRepo = new PrismaBarberRepository();
-const createAppointment = new CreateAppointment(appointmentRepo, clientRepository, timeRepo);
+const createAppointment = new CreateAppointment(appointmentRepo, clientRepository, timeRepo, customerRepo);
 const createAppointmentController = new CreateAppointmentController(createAppointment);
 const listClientAppointments = new ListClientAppointments(appointmentRepo, clientRepository);
 const listClientAppointmentsController = new ListClientAppointmentsController(listClientAppointments);

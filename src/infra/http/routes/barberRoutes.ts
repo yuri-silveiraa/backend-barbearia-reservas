@@ -18,12 +18,21 @@ import { PrismaUsersRepository } from "../../database/repositories/PrismaUsersRe
 import { AuthenticatedRequest } from "../helpers/requestInterface";
 import { ListBarberRevenueByRange } from "../../../core/use-cases/ListBarberRevenueByRange";
 import { ListBarberRevenueByRangeController } from "../controllers/barber/ListBarberRevenueByRangeController";
+import { CreateManualAppointment } from "../../../core/use-cases/CreateManualAppointment";
+import { CreateManualAppointmentController } from "../controllers/barber/CreateManualAppointmentController";
+import { PrismaCustomerRepository } from "../../database/repositories/PrismaCustomerRepository";
+import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
+import { validate } from "../middlewares/validate";
+import { CreateManualAppointmentSchema } from "../schemas/input/CreateManualAppointment.schema";
+import { appointmentRateLimiter } from "../middlewares/rateLimit";
 
 const barberRoutes = Router();
 
 const barberRepo = new PrismaBarberRepository();
 const appointmentRepo = new PrismaAppointmentRepository();
 const userRepo = new PrismaUsersRepository();
+const customerRepo = new PrismaCustomerRepository();
+const timeRepo = new PrismaTimeRepository();
 
 const listBarber = new ListBarber(barberRepo);
 const listBarberController = new ListBarberController(listBarber);
@@ -39,6 +48,9 @@ const getBarberDailyStatsController = new GetBarberDailyStatsController(getBarbe
 
 const listBarberRevenueByRange = new ListBarberRevenueByRange(barberRepo, appointmentRepo);
 const listBarberRevenueByRangeController = new ListBarberRevenueByRangeController(listBarberRevenueByRange);
+
+const createManualAppointment = new CreateManualAppointment(appointmentRepo, barberRepo, customerRepo, timeRepo);
+const createManualAppointmentController = new CreateManualAppointmentController(createManualAppointment);
 
 const createBarber = new CreateBarber(userRepo, barberRepo);
 const createBarberController = new CreateBarberController(createBarber);
@@ -71,6 +83,14 @@ barberRoutes.get(
   "/revenue",
   ensureBarber,
   (req, res) => listBarberRevenueByRangeController.handle(req as AuthenticatedRequest, res)
+);
+
+barberRoutes.post(
+  "/appointments/manual",
+  ensureBarber,
+  appointmentRateLimiter,
+  validate(CreateManualAppointmentSchema),
+  (req, res) => createManualAppointmentController.handle(req as AuthenticatedRequest, res)
 );
 
 barberRoutes.post(

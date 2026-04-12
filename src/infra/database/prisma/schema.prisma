@@ -32,6 +32,7 @@ model User {
   createdAt DateTime @default(now())
   barber    Barber? @relation("UserBarber")
   client    Client?  @relation("UserClient")
+  customer  Customer? @relation("UserCustomer")
 }
 
 model Barber {
@@ -51,6 +52,17 @@ model Client {
   user      User     @relation("UserClient", fields: [userId], references: [id])
   createdAt DateTime @default(now())
   appointments Appointment[]
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  whatsapp  String   @unique
+  userId    String?  @unique
+  user      User?    @relation("UserCustomer", fields: [userId], references: [id])
+  appointments Appointment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Service {
@@ -77,12 +89,19 @@ model Appointment {
   id         String   @id @default(uuid())
   status     AppointmentStatus @default(SCHEDULED)
   barberId   String
-  clientId   String
+  clientId   String?
+  customerId String
   serviceId  String
   timeId     String
   price      Float
+  customerName String
+  customerWhatsapp String
+  barberName String
+  serviceName String
+  scheduledAt DateTime
   service    Service    @relation(fields: [serviceId], references: [id])
-  client     Client     @relation(fields: [clientId], references: [id])
+  client     Client?    @relation(fields: [clientId], references: [id])
+  customer   Customer   @relation(fields: [customerId], references: [id])
   barber     Barber     @relation(fields: [barberId], references: [id])
   time       Time       @relation(fields: [timeId], references: [id])
   createdAt  DateTime @default(now())
