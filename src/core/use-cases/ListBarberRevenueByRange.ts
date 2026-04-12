@@ -8,7 +8,7 @@ export class ListBarberRevenueByRange {
     private appointmentRepository: IAppointmentsRepository,
   ) {}
 
-  async execute(userId: string, startDate: Date, endDate: Date) {
+  async execute(userId: string, startDate: Date, endDate: Date, serviceId?: string) {
     const barber = await this.barberRepository.findByUserId(userId);
     if (!barber) {
       throw new NoAuthorizationError();
@@ -17,7 +17,8 @@ export class ListBarberRevenueByRange {
     const completedAppointments = await this.appointmentRepository.findCompletedByBarberIdRange(
       barber.id,
       startDate,
-      endDate
+      endDate,
+      serviceId
     );
 
     const totalRevenue = completedAppointments.reduce((total, item) => total + item.price, 0);

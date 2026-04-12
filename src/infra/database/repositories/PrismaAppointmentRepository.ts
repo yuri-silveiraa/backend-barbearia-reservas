@@ -118,10 +118,11 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     return appointments.map(toAppointmentDTO);
   }
 
-  async findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]> {
+  async findByBarberIdRange(barberId: string, startDate: Date, endDate: Date, serviceId?: string): Promise<AppointmentDTO[]> {
     const appointments = await prisma.appointment.findMany({
       where: {
         barberId,
+        ...(serviceId && { serviceId }),
         scheduledAt: { gte: startDate, lte: endDate },
       },
       select: appointmentSelect,
@@ -134,11 +135,13 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
   async findCompletedByBarberIdRange(
     barberId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
+    serviceId?: string
   ): Promise<Array<{ id: string; serviceId: string; service: string; price: number; time: Date }>> {
     const appointments = await prisma.appointment.findMany({
       where: {
         barberId,
+        ...(serviceId && { serviceId }),
         status: "COMPLETED",
         scheduledAt: { gte: startDate, lte: endDate },
       },

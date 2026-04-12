@@ -1,22 +1,36 @@
-import { ListBarberRevenueByRange } from "./ListBarberRevenueByRange";
+import { ListBarberAppointmentsByRange } from "./ListBarberAppointmentsByRange";
 import { FakeAppointmentRepository } from "../../tests/repositories/FakeAppointmentRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
 
-describe("ListBarberRevenueByRange", () => {
-  it("deve calcular faturamento usando o preço salvo no agendamento", async () => {
+describe("ListBarberAppointmentsByRange", () => {
+  it("deve manter o comportamento sem serviceId retornando agendamentos do barbeiro no período", async () => {
     const appointmentRepository = new FakeAppointmentRepository();
     const barberRepository = new FakeBarberRepository();
     const barber = await barberRepository.create({ userId: "barber-user-1", isAdmin: false });
-    const sut = new ListBarberRevenueByRange(barberRepository, appointmentRepository);
+    const otherBarber = await barberRepository.create({ userId: "barber-user-2", isAdmin: false });
+    const sut = new ListBarberAppointmentsByRange(appointmentRepository, barberRepository);
 
-    const appointment = await appointmentRepository.create({
+    await appointmentRepository.create({
       barberId: barber.id,
       clientId: "client-1",
       serviceId: "service-1",
       timeId: "time-1",
       price: 70,
     });
-    await appointmentRepository.attend(appointment.id);
+    await appointmentRepository.create({
+      barberId: barber.id,
+      clientId: "client-2",
+      serviceId: "service-2",
+      timeId: "time-2",
+      price: 90,
+    });
+    await appointmentRepository.create({
+      barberId: otherBarber.id,
+      clientId: "client-3",
+      serviceId: "service-1",
+      timeId: "time-3",
+      price: 110,
+    });
 
     const result = await sut.execute(
       "barber-user-1",
@@ -24,43 +38,38 @@ describe("ListBarberRevenueByRange", () => {
       new Date("2100-01-01T00:00:00.000Z")
     );
 
-    expect(result.totalRevenue).toBe(70);
-    expect(result.appointments[0]).toEqual(expect.objectContaining({ amount: 70 }));
-    expect(result.services[0]).toEqual(expect.objectContaining({ total: 70, count: 1 }));
+    expect(result).toHaveLength(2);
+    expect(result.every((appointment) => appointment.barberId === barber.id)).toBe(true);
   });
 
-  it("deve calcular faturamento apenas do serviço informado e do barbeiro autenticado", async () => {
+  it("deve retornar apenas agendamentos do serviço informado sem acessar outro barbeiro", async () => {
     const appointmentRepository = new FakeAppointmentRepository();
     const barberRepository = new FakeBarberRepository();
     const barber = await barberRepository.create({ userId: "barber-user-1", isAdmin: false });
     const otherBarber = await barberRepository.create({ userId: "barber-user-2", isAdmin: false });
-    const sut = new ListBarberRevenueByRange(barberRepository, appointmentRepository);
+    const sut = new ListBarberAppointmentsByRange(appointmentRepository, barberRepository);
 
-    const target = await appointmentRepository.create({
+    await appointmentRepository.create({
       barberId: barber.id,
       clientId: "client-1",
       serviceId: "service-1",
       timeId: "time-1",
       price: 70,
     });
-    const anotherService = await appointmentRepository.create({
+    await appointmentRepository.create({
       barberId: barber.id,
       clientId: "client-2",
       serviceId: "service-2",
       timeId: "time-2",
-      price: 120,
+      price: 90,
     });
-    const anotherBarberSameService = await appointmentRepository.create({
+    await appointmentRepository.create({
       barberId: otherBarber.id,
       clientId: "client-3",
       serviceId: "service-1",
       timeId: "time-3",
-      price: 999,
+      price: 110,
     });
-
-    await appointmentRepository.attend(target.id);
-    await appointmentRepository.attend(anotherService.id);
-    await appointmentRepository.attend(anotherBarberSameService.id);
 
     const result = await sut.execute(
       "barber-user-1",
@@ -69,11 +78,7 @@ describe("ListBarberRevenueByRange", () => {
       "service-1"
     );
 
-    expect(result.totalRevenue).toBe(70);
-    expect(result.appointments).toHaveLength(1);
-    expect(result.appointments[0]).toEqual(expect.objectContaining({ serviceId: "service-1", amount: 70 }));
-    expect(result.services).toEqual([
-      expect.objectContaining({ serviceId: "service-1", total: 70, count: 1 }),
-    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(expect.objectContaining({ barberId: barber.id, serviceId: "service-1" }));
   });
 });

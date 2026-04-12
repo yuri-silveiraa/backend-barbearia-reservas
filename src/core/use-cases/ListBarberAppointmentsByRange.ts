@@ -8,12 +8,12 @@ export class ListBarberAppointmentsByRange {
     private barberRepository: IBarbersRepository,
   ) {}
 
-  async execute(userId: string, start: Date, end: Date): Promise<AppointmentDTO[]> {
+  async execute(userId: string, start: Date, end: Date, serviceId?: string): Promise<AppointmentDTO[]> {
     const barber = await this.barberRepository.findByUserId(userId);
     if (!barber) {
       throw new Error("Barbeiro não encontrado");
     }
 
-    return this.appointmentsRepository.findByBarberIdRange(barber.id, start, end);
+    return this.appointmentsRepository.findByBarberIdRange(barber.id, start, end, serviceId);
   }
 }

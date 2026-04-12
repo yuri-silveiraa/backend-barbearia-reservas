@@ -41,16 +41,31 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
   }
 
   async findByBarberIdToday(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]> {
-    return this.appointments.filter(a => a.barberId === barberId).map(a => this.toDTO(a));
-  }
-
-  async findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]> {
-    return this.appointments.filter(a => a.barberId === barberId).map(a => this.toDTO(a));
-  }
-
-  async findCompletedByBarberIdRange(barberId: string, startDate: Date, endDate: Date) {
     return this.appointments
-      .filter(a => a.barberId === barberId && a.status === "COMPLETED")
+      .filter(a => a.barberId === barberId && a.scheduledAt >= startDate && a.scheduledAt < endDate)
+      .map(a => this.toDTO(a));
+  }
+
+  async findByBarberIdRange(barberId: string, startDate: Date, endDate: Date, serviceId?: string): Promise<AppointmentDTO[]> {
+    return this.appointments
+      .filter(a =>
+        a.barberId === barberId &&
+        a.scheduledAt >= startDate &&
+        a.scheduledAt <= endDate &&
+        (!serviceId || a.serviceId === serviceId)
+      )
+      .map(a => this.toDTO(a));
+  }
+
+  async findCompletedByBarberIdRange(barberId: string, startDate: Date, endDate: Date, serviceId?: string) {
+    return this.appointments
+      .filter(a =>
+        a.barberId === barberId &&
+        a.status === "COMPLETED" &&
+        a.scheduledAt >= startDate &&
+        a.scheduledAt <= endDate &&
+        (!serviceId || a.serviceId === serviceId)
+      )
       .map(a => ({
         id: a.id,
         serviceId: a.serviceId,

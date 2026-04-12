@@ -17,8 +17,8 @@ export interface IAppointmentsRepository {
   findByCustomerId(id: string): Promise<AppointmentDTO[] | null>;
   findById(id: string): Promise<AppointmentDTO | null>;
   findByBarberIdToday(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]>;
-  findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]>;
-  findCompletedByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<BarberCompletedAppointmentDTO[]>;
+  findByBarberIdRange(barberId: string, startDate: Date, endDate: Date, serviceId?: string): Promise<AppointmentDTO[]>;
+  findCompletedByBarberIdRange(barberId: string, startDate: Date, endDate: Date, serviceId?: string): Promise<BarberCompletedAppointmentDTO[]>;
   countByClientSince(clientId: string, since: Date): Promise<number>;
   countCompletedByBarberToday(barberId: string, date: Date): Promise<number>;
   attend(id: string): Promise<boolean>;
