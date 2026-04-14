@@ -41,7 +41,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npx prisma migrate deploy --schema=src/infra/database/prisma/schema.prisma && npm run dev"
+    command: sh -c "npx prisma migrate deploy --schema=src/infra/database/prisma/schema.prisma && npx prisma generate --schema=src/infra/database/prisma/schema.prisma && npm run dev"
     networks:
       - dev-network
 
