@@ -10,6 +10,8 @@ describe("ListBarberController", () => {
           id: "1",
           userId: "user-1",
           name: "Carlos",
+          email: "carlos@example.com",
+          telephone: "11999990001",
           profileImageUrl: null,
           isAdmin: false,
           isActive: true,
@@ -19,6 +21,8 @@ describe("ListBarberController", () => {
           id: "2",
           userId: "user-2",
           name: "Admin",
+          email: "admin@example.com",
+          telephone: "11999990002",
           profileImageUrl: "/api/user/user-2/profile-image?v=1",
           isAdmin: true,
           isActive: true,
@@ -37,8 +41,8 @@ describe("ListBarberController", () => {
     expect(mockListBarber.execute).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(expect.arrayContaining([
-      expect.objectContaining({ nome: "Carlos" }),
-      expect.objectContaining({ nome: "Admin" }),
+      expect.objectContaining({ nome: "Carlos", email: "carlos@example.com", telefone: "11999990001" }),
+      expect.objectContaining({ nome: "Admin", email: "admin@example.com", telefone: "11999990002" }),
     ]));
   });
 

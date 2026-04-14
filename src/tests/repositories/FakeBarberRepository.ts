@@ -36,6 +36,8 @@ export class FakeBarberRepository implements IBarbersRepository {
         id: b.id,
         userId: b.userId,
         name: `User ${b.userId}`,
+        email: `${b.userId}@example.com`,
+        telephone: `+55${b.userId}`,
         profileImageUrl: null,
         isAdmin: b.isAdmin,
         isActive: b.isActive,

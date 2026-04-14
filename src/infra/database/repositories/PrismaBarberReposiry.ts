@@ -32,7 +32,7 @@ export class PrismaBarberRepository implements IBarbersRepository {
     const barbers = await prisma.barber.findMany({
       where: { isActive: true },
       include: {
-        user: { select: { name: true, profileImageData: true }},
+        user: { select: { name: true, email: true, telephone: true, profileImageData: true }},
       }
     });
     
@@ -40,6 +40,8 @@ export class PrismaBarberRepository implements IBarbersRepository {
       id: b.id,
       userId: b.userId,
       name: b.user.name,
+      email: b.user.email,
+      telephone: b.user.telephone,
       profileImageUrl: b.user.profileImageData ? `/api/user/${b.userId}/profile-image?v=${Date.now()}` : null,
       isAdmin: b.isAdmin,
       isActive: b.isActive,
