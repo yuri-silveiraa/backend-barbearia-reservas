@@ -30,5 +30,6 @@ describe("CreateUser", () => {
     });
 
     expect(result.user.name).toBe("Yuri Pires");
+    expect(result.user.emailVerified).toBe(false);
   });
 });

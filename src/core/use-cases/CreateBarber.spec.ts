@@ -24,6 +24,7 @@ describe("CreateBarber", () => {
     expect(user.name).toBe(data.name);
     expect(user.email).toBe(data.email);
     expect(user.type).toBe("BARBER");
+    expect(user.emailVerified).toBe(true);
 
     const passwordMatch = await bcrypt.compare(data.password, user.password);
     expect(passwordMatch).toBe(true);

@@ -24,6 +24,7 @@ export class CreateBarber {
       ...data,
       password: hashedPassword,
       type: "BARBER",
+      emailVerified: true,
     });
 
     await this.barberRepository.create({

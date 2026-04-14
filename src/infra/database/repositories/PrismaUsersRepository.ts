@@ -1,4 +1,3 @@
-import { CreateUserDTO } from "../../../core/dtos/CreateUserDTO";
 import { User } from "../../../core/entities/User";
 import { IUserRepository } from "../../../core/repositories/IUserRepository";
 import { prisma } from "../prisma/prismaClient";
@@ -9,7 +8,7 @@ export class PrismaUsersRepository implements IUserRepository {
       where: { email },
     });
   }
-  async create(data: CreateUserDTO): Promise<User> {
+  async create(data: Parameters<IUserRepository["create"]>[0]): Promise<User> {
     const user = await prisma.user.create({
       data: {
         name: data.name,
@@ -17,6 +16,10 @@ export class PrismaUsersRepository implements IUserRepository {
         password: data.password,
         type: data.type,
         telephone: data.telephone,
+        emailVerified: data.emailVerified ?? false,
+        emailCode: data.emailCode,
+        emailCodeExpires: data.emailCodeExpires,
+        emailCodeCooldownExpires: data.emailCodeCooldownExpires,
       }
     });
     if (user.type == "CLIENT") {

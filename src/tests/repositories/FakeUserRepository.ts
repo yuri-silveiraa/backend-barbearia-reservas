@@ -15,6 +15,7 @@ export class FakeUsersRepository implements IUserRepository {
       id: String(this.users.length + 1),
       createdAt: new Date(),
       ...data,
+      emailVerified: data.emailVerified ?? false,
     };
     this.users.push(newUser);
     return newUser;
