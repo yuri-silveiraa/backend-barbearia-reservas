@@ -21,7 +21,7 @@ model User {
   name      String
   email     String   @unique
   password  String?
-  telephone String
+  telephone String @unique
   type      UserType
   provider  String?
   providerId String? @unique

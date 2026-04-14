@@ -25,6 +25,11 @@ export class CreateUser {
       throw new UserAlreadyExistsError(data.email);
     }
 
+    const telephoneAlreadyExists = await this.usersRepository.findByTelephone(data.telephone);
+    if (telephoneAlreadyExists) {
+      throw new AppError("Telefone já cadastrado", 409);
+    }
+
     if (!isNameValid(data.name)) {
       throw new AppError("Nome deve conter apenas letras");
     }

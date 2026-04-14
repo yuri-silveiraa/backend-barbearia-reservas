@@ -38,7 +38,7 @@ export class AuthenticateWithGoogle {
           type: "CLIENT",
           provider: "google",
           providerId: payload.sub,
-          telephone: "",
+          telephone: `google:${payload.sub}`,
           emailVerified: true,
         });
       }

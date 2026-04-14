@@ -2,6 +2,7 @@ import { CreateBarber } from "./CreateBarber";
 import { FakeUsersRepository } from "../../tests/repositories/FakeUserRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
 import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
+import { AppError } from "../errors/AppError";
 import bcrypt from "bcrypt";
 
 describe("CreateBarber", () => {
@@ -40,7 +41,7 @@ describe("CreateBarber", () => {
       email: "admin@barbearia.com",
       password: "123456",
       type: "BARBER" as const,
-      telephone: "11999999999",
+      telephone: "11999999998",
     };
 
     const user = await sut.execute(data, true);
@@ -55,9 +56,33 @@ describe("CreateBarber", () => {
       email: "carlos@barbearia.com",
       password: "123456",
       type: "BARBER" as const,
-      telephone: "11999999999",
+      telephone: "11999999997",
     };
 
     await expect(sut.execute(data, false)).rejects.toThrow(UserAlreadyExistsError);
+  });
+
+  it("deve lançar erro se o telefone já existir", async () => {
+    const usersRepository = new FakeUsersRepository();
+    const barberRepository = new FakeBarberRepository();
+    const sut = new CreateBarber(usersRepository, barberRepository);
+
+    await sut.execute({
+      name: "Carlos",
+      email: "carlos-novo@barbearia.com",
+      password: "123456",
+      type: "BARBER",
+      telephone: "11999999999",
+    });
+
+    await expect(
+      sut.execute({
+        name: "Joao",
+        email: "joao@barbearia.com",
+        password: "123456",
+        type: "BARBER",
+        telephone: "11999999999",
+      })
+    ).rejects.toBeInstanceOf(AppError);
   });
 });

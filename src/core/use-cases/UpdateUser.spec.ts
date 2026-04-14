@@ -90,4 +90,40 @@ describe("UpdateUser", () => {
       })
     ).rejects.toBeInstanceOf(AppError);
   });
+
+  it("não permite atualizar para telefone já usado por outro usuário", async () => {
+    const usersRepository = new FakeUsersRepository();
+    const user = await usersRepository.create({
+      name: "Yuri Pires",
+      email: "yuri@example.com",
+      password: "hashed",
+      type: "CLIENT",
+      telephone: "11999999999",
+      emailVerified: true,
+      emailCode: null,
+      emailCodeExpires: null,
+      emailCodeCooldownExpires: null,
+      provider: null,
+      providerId: null,
+    });
+    await usersRepository.create({
+      name: "Outro Usuario",
+      email: "outro@example.com",
+      password: "hashed",
+      type: "CLIENT",
+      telephone: "11888888888",
+      emailVerified: true,
+      emailCode: null,
+      emailCodeExpires: null,
+      emailCodeCooldownExpires: null,
+      provider: null,
+      providerId: null,
+    });
+
+    const useCase = new UpdateUser(usersRepository);
+
+    await expect(
+      useCase.execute({ userId: user.id, telephone: "11888888888" })
+    ).rejects.toMatchObject({ message: "Telefone já cadastrado" });
+  });
 });

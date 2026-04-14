@@ -30,6 +30,13 @@ export class UpdateUser {
       }
     }
 
+    if (data.telephone && data.telephone !== user.telephone) {
+      const existing = await this.usersRepository.findByTelephone(data.telephone);
+      if (existing && existing.id !== user.id) {
+        throw new AppError("Telefone já cadastrado", 409);
+      }
+    }
+
     if (data.name && !isNameValid(data.name)) {
       throw new AppError("Nome deve conter apenas letras");
     }

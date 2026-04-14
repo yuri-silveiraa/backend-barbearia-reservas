@@ -15,5 +15,6 @@ describe("AuthenticateWithGoogle", () => {
 
     expect(user.emailVerified).toBe(true);
     expect(user.name).toBe("Yuri Pires");
+    expect(user.telephone).toBe("google:google-sub-1");
   });
 });

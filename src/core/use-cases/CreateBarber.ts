@@ -4,6 +4,7 @@ import { UserAlreadyExistsError } from "../errors/UserAlreadyExistsError";
 import { IUserRepository } from "../repositories/IUserRepository";
 import { IBarbersRepository } from "../repositories/IBarberRepository";
 import bcrypt from "bcrypt";
+import { AppError } from "../errors/AppError";
 
 export class CreateBarber {
   constructor(
@@ -16,6 +17,11 @@ export class CreateBarber {
 
     if (userAlreadyExists) {
       throw new UserAlreadyExistsError(data.email);
+    }
+
+    const telephoneAlreadyExists = await this.usersRepository.findByTelephone(data.telephone);
+    if (telephoneAlreadyExists) {
+      throw new AppError("Telefone já cadastrado", 409);
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);

@@ -10,6 +10,11 @@ export class FakeUsersRepository implements IUserRepository {
     return user || null;
   }
 
+  async findByTelephone(telephone: string): Promise<User | null> {
+    const user = this.users.find(u => u.telephone === telephone);
+    return user || null;
+  }
+
   async create(data: Omit<User, "id" | "createdAt">): Promise<User> {
     const newUser: User = {
       id: String(this.users.length + 1),

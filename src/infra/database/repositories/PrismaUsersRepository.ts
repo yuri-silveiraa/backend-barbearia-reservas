@@ -8,6 +8,13 @@ export class PrismaUsersRepository implements IUserRepository {
       where: { email },
     });
   }
+
+  async findByTelephone(telephone: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { telephone },
+    });
+  }
+
   async create(data: Parameters<IUserRepository["create"]>[0]): Promise<User> {
     const user = await prisma.user.create({
       data: {
@@ -70,7 +77,7 @@ export class PrismaUsersRepository implements IUserRepository {
         data: {
           name: "Usuario excluido",
           email: `deleted+${id}@example.invalid`,
-          telephone: "REMOVIDO",
+          telephone: `REMOVIDO+${id}`,
           password: null,
           provider: null,
           providerId: null,

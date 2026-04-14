@@ -3,6 +3,7 @@ import { User } from '../entities/User';
 export interface IUserRepository {
   create(data: Omit<User, 'id' | 'createdAt' | 'emailVerified' | 'emailCode' | 'emailCodeExpires'> & { emailVerified?: boolean; emailCode?: string; emailCodeExpires?: Date; emailCodeCooldownExpires?: Date }): Promise<User>;
   findByEmail(email: string): Promise<User | null>;
+  findByTelephone(telephone: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;
   findByProviderId(providerId: string): Promise<User | null>;
   deleteById(id: string): Promise<void>;

@@ -32,4 +32,27 @@ describe("CreateUser", () => {
     expect(result.user.name).toBe("Yuri Pires");
     expect(result.user.emailVerified).toBe(false);
   });
+
+  it("não permite cadastrar cliente com telefone já usado", async () => {
+    const usersRepository = new FakeUsersRepository();
+    const useCase = new CreateUser(usersRepository);
+
+    await useCase.execute({
+      name: "Yuri Pires",
+      email: "yuri@example.com",
+      password: "Senha123",
+      telephone: "11999999999",
+      type: "CLIENT",
+    });
+
+    await expect(
+      useCase.execute({
+        name: "Outro Cliente",
+        email: "outro@example.com",
+        password: "Senha123",
+        telephone: "11999999999",
+        type: "CLIENT",
+      })
+    ).rejects.toMatchObject({ message: "Telefone já cadastrado" });
+  });
 });

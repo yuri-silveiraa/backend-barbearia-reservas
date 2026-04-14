@@ -38,7 +38,7 @@ export class DeleteMeUser {
     await this.usersRepository.update(userId, {
       name: "Usuario excluido",
       email: anonymizedEmail,
-      telephone: "REMOVIDO",
+      telephone: `REMOVIDO+${user.id}`,
       password: null,
       provider: null,
       providerId: null,

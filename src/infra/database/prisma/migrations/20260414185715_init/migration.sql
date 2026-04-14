@@ -106,6 +106,9 @@ CREATE TABLE "Appointment" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_telephone_key" ON "User"("telephone");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_providerId_key" ON "User"("providerId");
 
 -- CreateIndex
