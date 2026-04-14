@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { UpdateUser } from "../../../../core/use-cases/UpdateUser";
 import { AuthenticatedRequest } from "../../helpers/requestInterface";
+import { toUserResponse } from "../../helpers/userResponse";
 
 export class UpdateUserController {
   constructor(private updateUser: UpdateUser) {}
@@ -15,7 +16,7 @@ export class UpdateUserController {
       ...req.body,
     });
 
-    const { password, ...userWithoutPassword } = updated as { password?: string };
+    const userWithoutPassword = toUserResponse(updated);
     const responseUser = {
       ...userWithoutPassword,
       isAdmin: updated.barber?.isAdmin ?? false,

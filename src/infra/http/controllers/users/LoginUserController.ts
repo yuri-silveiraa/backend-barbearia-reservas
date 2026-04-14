@@ -5,6 +5,7 @@ import { sign } from 'jsonwebtoken';
 import { env } from '../../../../config/env';
 import { AUTH_TOKEN_EXPIRES_IN, getAuthCookieOptions } from '../../helpers/authCookie';
 import { prisma } from '../../../database/prisma/prismaClient';
+import { toUserResponse } from '../../helpers/userResponse';
 
 export class LoginUserController {
   constructor(private authenticateUser: AuthenticateUser) {}
@@ -24,7 +25,7 @@ export class LoginUserController {
       include: { barber: true }
     });
 
-    const { password, ...userWithoutPassword } = user as User & { password: string };
+    const userWithoutPassword = toUserResponse(user as User);
     const responseUser = {
       ...userWithoutPassword,
       isAdmin: fullUser?.barber?.isAdmin ?? false

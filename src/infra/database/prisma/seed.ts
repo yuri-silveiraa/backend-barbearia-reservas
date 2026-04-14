@@ -10,6 +10,8 @@ type SeedUser = {
   password: string;
   type: UserType;
   telephone: string;
+  profileImageData?: Buffer;
+  profileImageMimeType?: string;
 };
 
 type PublicSeedUser = {
@@ -23,6 +25,15 @@ const MIN_SERVICE_ROWS = 5;
 const MIN_TIME_ROWS = 700;
 const MIN_APPOINTMENT_ROWS = 300;
 const SEED_DAYS_WINDOW = 45;
+
+const profileImages = {
+  douglas: Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#073b35"/><stop offset="1" stop-color="#00bfa5"/></linearGradient></defs><rect width="512" height="512" fill="url(#g)"/><circle cx="256" cy="172" r="82" fill="#f6ddb0"/><path d="M162 406c18-76 62-116 94-116s76 40 94 116" fill="#111827"/><path d="M184 158c16-62 126-72 150-8-28-16-76-20-150 8z" fill="#171717"/><path d="M184 235c42 62 102 62 144 0-6 72-34 110-72 110s-66-38-72-110z" fill="#2b1b14"/><text x="256" y="476" text-anchor="middle" fill="#f7f0dc" font-family="Arial" font-size="42" font-weight="700">Douglas</text></svg>`
+  ),
+  carlos: Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#151515"/><stop offset="1" stop-color="#5c3b22"/></linearGradient></defs><rect width="512" height="512" fill="url(#g)"/><circle cx="256" cy="170" r="80" fill="#d9a36f"/><path d="M154 408c20-78 66-120 102-120s82 42 102 120" fill="#0f766e"/><path d="M184 148c24-54 128-54 152 4-46-12-92-12-152-4z" fill="#111"/><path d="M176 228c40 82 120 82 160 0 2 80-32 128-80 128s-82-48-80-128z" fill="#1f130e"/><text x="256" y="476" text-anchor="middle" fill="#f7f0dc" font-family="Arial" font-size="42" font-weight="700">Carlos</text></svg>`
+  ),
+};
 
 const serviceImages = {
   scissors: Buffer.from(
@@ -130,6 +141,8 @@ async function upsertUser(data: SeedUser) {
       password: hashedPassword,
       type: data.type,
       telephone: data.telephone,
+      profileImageData: data.profileImageData,
+      profileImageMimeType: data.profileImageMimeType,
     },
     create: {
       name: data.name,
@@ -137,6 +150,8 @@ async function upsertUser(data: SeedUser) {
       password: hashedPassword,
       type: data.type,
       telephone: data.telephone,
+      profileImageData: data.profileImageData,
+      profileImageMimeType: data.profileImageMimeType,
     },
   });
 }
@@ -364,6 +379,8 @@ async function main() {
     password: "Douglas@123",
     type: UserType.BARBER,
     telephone: "11999999999",
+    profileImageData: profileImages.douglas,
+    profileImageMimeType: "image/svg+xml",
   });
 
   const barber = await upsertUser({
@@ -372,6 +389,8 @@ async function main() {
     password: "Carlos@123",
     type: UserType.BARBER,
     telephone: "11988888888",
+    profileImageData: profileImages.carlos,
+    profileImageMimeType: "image/svg+xml",
   });
 
   await upsertBarberProfile(admin.id, true);

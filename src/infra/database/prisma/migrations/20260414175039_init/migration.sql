@@ -18,6 +18,8 @@ CREATE TABLE "User" (
     "emailCode" TEXT,
     "emailCodeExpires" TIMESTAMP(3),
     "emailCodeCooldownExpires" TIMESTAMP(3),
+    "profileImageData" BYTEA,
+    "profileImageMimeType" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")

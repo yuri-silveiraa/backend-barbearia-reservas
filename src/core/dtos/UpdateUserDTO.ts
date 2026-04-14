@@ -3,4 +3,7 @@ export interface UpdateUserDTO {
   name?: string;
   email?: string;
   telephone?: string;
+  profileImageBase64?: string;
+  profileImageMimeType?: string;
+  removeProfileImage?: boolean;
 }

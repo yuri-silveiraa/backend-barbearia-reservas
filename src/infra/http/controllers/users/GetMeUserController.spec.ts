@@ -10,6 +10,8 @@ describe("GetMeUserController", () => {
         name: "Yuri",
         email: "yuri@teste.com",
         type: "CLIENT",
+        profileImageData: undefined,
+        profileImageMimeType: undefined,
         createdAt: new Date(),
       }),
     };
@@ -31,6 +33,7 @@ describe("GetMeUserController", () => {
       name: "Yuri",
       email: "yuri@teste.com",
       type: "CLIENT",
+      profileImageUrl: null,
       createdAt: expect.any(Date),
     });
   });

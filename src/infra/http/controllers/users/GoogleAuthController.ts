@@ -6,6 +6,7 @@ import { sign } from 'jsonwebtoken';
 import { env } from '../../../../config/env';
 import { AUTH_TOKEN_EXPIRES_IN, getAuthCookieOptions } from '../../helpers/authCookie';
 import { OAuth2Client } from 'google-auth-library';
+import { toUserResponse } from '../../helpers/userResponse';
 
 export class GoogleAuthController {
   private usersRepository: PrismaUsersRepository;
@@ -53,7 +54,7 @@ export class GoogleAuthController {
 
       res.cookie('token', token, getAuthCookieOptions(req));
 
-      const { password, ...userWithoutPassword } = user as User & { password: string };
+      const userWithoutPassword = toUserResponse(user as User);
       return res.status(200).json({ user: userWithoutPassword });
     } catch (error) {
       console.error('Erro na autenticação Google:', error);

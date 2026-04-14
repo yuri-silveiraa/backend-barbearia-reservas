@@ -25,6 +25,7 @@ import { DeleteMeUserController } from "../controllers/users/DeleteMeUserControl
 import { PrismaClientRepository } from "../../database/repositories/PrismaClientRepository";
 import { PrismaAppointmentRepository } from "../../database/repositories/PrismaAppointmentRepository";
 import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
+import { GetUserProfileImageController } from "../controllers/users/GetUserProfileImageController";
 
 const userRoutes = Router();
 
@@ -38,6 +39,7 @@ const loginController = new LoginUserController(authenticateUser);
 
 const getMeUser = new GetMeUser(userRepo);
 const getMeUserController = new GetMeUserController(getMeUser);
+const getUserProfileImageController = new GetUserProfileImageController(userRepo);
 
 const googleAuthController = new GoogleAuthController();
 
@@ -83,6 +85,12 @@ userRoutes.get(
   "/me", 
   ensureAuthenticated,
   (req, res) => getMeUserController.handle(req as AuthenticatedRequest, res)
+);
+
+userRoutes.get(
+  "/:id/profile-image",
+  ensureAuthenticated,
+  (req, res) => getUserProfileImageController.handle(req, res)
 );
 
 userRoutes.patch(

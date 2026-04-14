@@ -17,6 +17,8 @@ export class User {
     public emailCode?: string | null,
     public emailCodeExpires?: Date | null,
     public emailCodeCooldownExpires?: Date | null,
+    public profileImageData?: Uint8Array<ArrayBuffer> | null,
+    public profileImageMimeType?: string | null,
     public readonly createdAt: Date = new Date(),
     public barber?: Barber | null,
     public client?: Client | null

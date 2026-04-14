@@ -9,7 +9,7 @@ export interface IUserRepository {
   getMe(id: string): Promise<User | null>;
   update(
     id: string,
-    data: Partial<Pick<User, "name" | "email" | "telephone" | "password" | "provider" | "providerId" | "emailVerified" | "emailCode" | "emailCodeExpires" | "emailCodeCooldownExpires">>
+    data: Partial<Pick<User, "name" | "email" | "telephone" | "password" | "provider" | "providerId" | "emailVerified" | "emailCode" | "emailCodeExpires" | "emailCodeCooldownExpires" | "profileImageData" | "profileImageMimeType">>
   ): Promise<User>;
   updateEmailVerification(id: string, verified: boolean): Promise<void>;
   setEmailCode(id: string, code: string, expiresAt: Date, cooldownExpiresAt: Date): Promise<void>;

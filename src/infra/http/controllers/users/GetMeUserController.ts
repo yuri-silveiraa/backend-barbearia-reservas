@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { GetMeUser } from "../../../../core/use-cases/getMeUser";
 import { AuthenticatedRequest } from "../../helpers/requestInterface";
+import { toUserResponse } from "../../helpers/userResponse";
 
 export class GetMeUserController {
   constructor (private getMeUser: GetMeUser) {}
@@ -11,6 +12,6 @@ export class GetMeUserController {
       return res.status(401).json({ message: "Usuário não autenticado" });
     }
     const user = await this.getMeUser.execute(req.user?.id);
-    return res.status(200).json(user);
+    return res.status(200).json(toUserResponse(user));
   }
 }

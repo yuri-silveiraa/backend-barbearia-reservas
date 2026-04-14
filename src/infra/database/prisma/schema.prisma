@@ -29,6 +29,8 @@ model User {
   emailCode String?
   emailCodeExpires DateTime?
   emailCodeCooldownExpires DateTime?
+  profileImageData Bytes?
+  profileImageMimeType String?
   createdAt DateTime @default(now())
   barber    Barber? @relation("UserBarber")
   client    Client?  @relation("UserClient")

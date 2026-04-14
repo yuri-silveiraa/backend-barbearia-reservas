@@ -4,6 +4,7 @@ import { VerifyEmail } from "../../../../core/use-cases/VerifyEmail";
 import { env } from "../../../../config/env";
 import { AUTH_TOKEN_EXPIRES_IN, getAuthCookieOptions } from "../../helpers/authCookie";
 import { PrismaUsersRepository } from "../../../database/repositories/PrismaUsersRepository";
+import { toUserResponse } from "../../helpers/userResponse";
 
 export class VerifyEmailController {
   constructor(private verifyEmail: VerifyEmail) {}
@@ -37,7 +38,7 @@ export class VerifyEmailController {
         return res.status(500).json({ message: "Erro ao carregar usuário" });
       }
 
-      const { password, ...userWithoutPassword } = fullUser as { password?: string };
+      const userWithoutPassword = toUserResponse(fullUser);
       const responseUser = {
         ...userWithoutPassword,
         isAdmin: fullUser.barber?.isAdmin ?? false,

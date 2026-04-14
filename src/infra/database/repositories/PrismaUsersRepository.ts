@@ -75,6 +75,8 @@ export class PrismaUsersRepository implements IUserRepository {
           emailCode: null,
           emailCodeExpires: null,
           emailCodeCooldownExpires: null,
+          profileImageData: null,
+          profileImageMimeType: null,
         },
       });
     });
@@ -92,7 +94,7 @@ export class PrismaUsersRepository implements IUserRepository {
 
   async update(
     id: string,
-    data: Partial<Pick<User, "name" | "email" | "telephone" | "password" | "provider" | "providerId" | "emailVerified" | "emailCode" | "emailCodeExpires" | "emailCodeCooldownExpires">>
+    data: Partial<Pick<User, "name" | "email" | "telephone" | "password" | "provider" | "providerId" | "emailVerified" | "emailCode" | "emailCodeExpires" | "emailCodeCooldownExpires" | "profileImageData" | "profileImageMimeType">>
   ): Promise<User> {
     return await prisma.user.update({
       where: { id },

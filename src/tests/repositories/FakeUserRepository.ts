@@ -36,7 +36,7 @@ export class FakeUsersRepository implements IUserRepository {
 
   async update(
     id: string,
-    data: Partial<Pick<User, "name" | "email" | "telephone" | "password" | "provider" | "providerId" | "emailVerified" | "emailCode" | "emailCodeExpires" | "emailCodeCooldownExpires">>
+    data: Partial<Pick<User, "name" | "email" | "telephone" | "password" | "provider" | "providerId" | "emailVerified" | "emailCode" | "emailCodeExpires" | "emailCodeCooldownExpires" | "profileImageData" | "profileImageMimeType">>
   ): Promise<User> {
     const userIndex = this.users.findIndex(u => u.id === id);
     if (userIndex === -1) {
