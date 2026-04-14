@@ -12,7 +12,11 @@ export const GenerateTimeSlotsSchema = z.object({
   endDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Data inválida",
   }),
+  selectedDates: z.array(z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: "Data inválida",
+  })).optional(),
   excludeDays: z.array(z.number().min(0).max(6)).optional(),
+  confirmRemainder: z.boolean().optional(),
   selectedOption: z.object({
     start: z.string(),
     end: z.string(),

@@ -27,7 +27,9 @@ export class DeleteMeUser {
       for (const appointment of appointments) {
         if (appointment.status === "SCHEDULED") {
           await this.appointmentsRepository.canceled(appointment.id);
-          await this.timeRepository.updateDisponible(appointment.timeId, true);
+          if (appointment.timeId) {
+            await this.timeRepository.updateDisponible(appointment.timeId, true);
+          }
         }
       }
     }

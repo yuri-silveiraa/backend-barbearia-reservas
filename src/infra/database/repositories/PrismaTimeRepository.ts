@@ -1,13 +1,14 @@
-import { Time } from "@prisma/client";
-import { ITimeRepository } from "../../../core/repositories/ITimeRepository";
+import { Time } from "../../../core/entities/Time";
+import { CreateTimeRepositoryDTO, ITimeRepository } from "../../../core/repositories/ITimeRepository";
 import { prisma } from "../prisma/prismaClient";
 
 export class PrismaTimeRepository implements ITimeRepository {
-  async create(data: Omit<Time, "id" | "disponible">): Promise<Time> {
+  async create(data: CreateTimeRepositoryDTO): Promise<Time> {
     const time = await prisma.time.create({
       data: {
         date: data.date,
-        barberId: data.barberId
+        barberId: data.barberId,
+        duration: data.duration ?? 60,
       }
     });
     return time;
@@ -17,7 +18,7 @@ export class PrismaTimeRepository implements ITimeRepository {
     const now = new Date();
     const times = await prisma.time.findMany({
       where: { 
-        barberId: barberId,
+        barberId,
         date: {
           gte: now,
         },
@@ -34,11 +35,26 @@ export class PrismaTimeRepository implements ITimeRepository {
     return times;
   }
 
+  async findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<Time[]> {
+    return await prisma.time.findMany({
+      where: {
+        barberId,
+        date: {
+          gte: startDate,
+          lt: endDate,
+        },
+      },
+      orderBy: {
+        date: "asc",
+      },
+    });
+  }
+
   async findAvailableByBarberId(barberId: string): Promise<Time[] | null> {
     const now = new Date();
     const times = await prisma.time.findMany({
       where: { 
-        barberId: barberId,
+        barberId,
         disponible: true,
         date: {
           gte: now,
@@ -61,7 +77,7 @@ export class PrismaTimeRepository implements ITimeRepository {
   async updateDisponible(timeId: string, disponible: boolean): Promise<void> {
     await prisma.time.update({
       where: { id: timeId },
-      data: { disponible: disponible },
+      data: { disponible },
     });
   }
 

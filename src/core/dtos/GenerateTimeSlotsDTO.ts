@@ -6,7 +6,9 @@ export interface GenerateTimeSlotsDTO {
   intervalDuration?: number;
   startDate: string;
   endDate: string;
+  selectedDates?: string[];
   excludeDays?: number[];
+  confirmRemainder?: boolean;
 }
 
 export interface TimeSlotValidationResult {
@@ -14,10 +16,8 @@ export interface TimeSlotValidationResult {
   error?: string;
   warning?: {
     message: string;
-    options: Array<{
-      start: string;
-      end: string;
-    }>;
+    remainderMinutes: number;
+    lastBlockEnd: string;
   };
 }
 

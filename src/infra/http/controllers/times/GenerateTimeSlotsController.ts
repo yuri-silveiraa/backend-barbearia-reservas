@@ -15,8 +15,7 @@ export class GenerateTimeSlotsController {
 
       const { timeSlots, validation } = await this.generateTimeSlots.execute(
         barberUserId,
-        req.body,
-        req.body.selectedOption
+        req.body
       );
 
       return res.status(201).json({

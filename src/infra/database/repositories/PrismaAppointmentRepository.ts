@@ -212,7 +212,7 @@ function toAppointmentDTO(appointment: {
   customerId: string;
   barberId: string;
   serviceId: string;
-  timeId: string;
+  timeId: string | null;
   price: number;
   customerName: string;
   customerWhatsapp: string;

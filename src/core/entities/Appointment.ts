@@ -5,7 +5,7 @@ export class Appointment {
     public readonly id: string,
     public barberId: string,
     public serviceId: string,
-    public timeId: string,
+    public timeId: string | null,
     public customerId: string,
     public customerName: string,
     public customerWhatsapp: string,

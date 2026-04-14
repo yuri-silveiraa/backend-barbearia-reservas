@@ -80,6 +80,7 @@ model Time {
   id         String   @id @default(uuid())
   disponible Boolean  @default(true)
   date       DateTime
+  duration   Int      @default(60)
   barberId   String
   barber     Barber   @relation(fields: [barberId], references: [id])
   appointments Appointment[]
@@ -92,7 +93,7 @@ model Appointment {
   clientId   String?
   customerId String
   serviceId  String
-  timeId     String
+  timeId     String?
   price      Float
   customerName String
   customerWhatsapp String
@@ -103,6 +104,6 @@ model Appointment {
   client     Client?    @relation(fields: [clientId], references: [id])
   customer   Customer   @relation(fields: [customerId], references: [id])
   barber     Barber     @relation(fields: [barberId], references: [id])
-  time       Time       @relation(fields: [timeId], references: [id])
+  time       Time?      @relation(fields: [timeId], references: [id], onDelete: SetNull)
   createdAt  DateTime @default(now())
 }

@@ -14,8 +14,7 @@ export class DeleteTimeSlot {
       throw new Error("Barbeiro não encontrado");
     }
 
-    const timeSlots = await this.timeRepository.findByBarberId(barber.id);
-    const timeSlot = timeSlots?.find((t) => t.id === timeSlotId);
+    const timeSlot = await this.timeRepository.findById(timeSlotId);
 
     if (!timeSlot) {
       throw new Error("Horário não encontrado");

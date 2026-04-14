@@ -1,15 +1,16 @@
 import { Time } from "../../core/entities/Time";
-import { ITimeRepository } from "../../core/repositories/ITimeRepository";
+import { CreateTimeRepositoryDTO, ITimeRepository } from "../../core/repositories/ITimeRepository";
 
 export class FakeTimeRepository implements ITimeRepository {
   private times: Time[] = [];
 
-  async create(data: Omit<Time, "id" | "disponible">): Promise<Time> {
+  async create(data: CreateTimeRepositoryDTO): Promise<Time> {
     const time: Time = {
       id: String(this.times.length + 1),
       date: data.date,
       barberId: data.barberId,
       disponible: true,
+      duration: data.duration ?? 60,
     };
     this.times.push(time);
     return time;
@@ -19,6 +20,14 @@ export class FakeTimeRepository implements ITimeRepository {
     const now = new Date();
     const times = this.times.filter(t => t.barberId === barberId && new Date(t.date) >= now);
     return times.length > 0 ? times : null;
+  }
+
+  async findByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<Time[]> {
+    return this.times.filter((time) =>
+      time.barberId === barberId &&
+      new Date(time.date).getTime() >= startDate.getTime() &&
+      new Date(time.date).getTime() < endDate.getTime()
+    );
   }
 
   async findAvailableByBarberId(barberId: string): Promise<Time[] | null> {

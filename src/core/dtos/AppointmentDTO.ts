@@ -8,7 +8,7 @@ export interface AppointmentDTO {
   barber: string;
   serviceId: string;
   service: string;
-  timeId: string;
+  timeId?: string | null;
   time: Date;
   price: number;
   status: string;

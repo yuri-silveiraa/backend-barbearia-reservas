@@ -40,6 +40,8 @@ export class CanceledAppointment {
     }
 
     await this.appointmentRepository.canceled(appointmentId);
-    await this.timeRepository.updateDisponible(appointment.timeId, true);
+    if (appointment.timeId) {
+      await this.timeRepository.updateDisponible(appointment.timeId, true);
+    }
   }
 }

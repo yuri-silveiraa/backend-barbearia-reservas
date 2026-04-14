@@ -3,6 +3,7 @@ export class Time {
     public readonly id: string,
     public readonly barberId: string,
     public date: Date,
-    public disponible: boolean = true
+    public disponible: boolean = true,
+    public duration: number = 60
   ) {}
 }

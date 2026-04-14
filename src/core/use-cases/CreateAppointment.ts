@@ -33,6 +33,7 @@ export class CreateAppointment {
       if (scheduledAppointments.length > 0) {
         const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
         for (const appointment of scheduledAppointments) {
+          if (!appointment.timeId) continue;
           const scheduledTime = await this.timeRepository.findById(appointment.timeId);
           if (!scheduledTime) continue;
           const diff = Math.abs(scheduledTime.date.getTime() - time.date.getTime());
