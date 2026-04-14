@@ -6,6 +6,7 @@ export interface AppointmentDTO {
   clientTelephone?: string;
   barberId: string;
   barber: string;
+  barberTelephone?: string | null;
   serviceId: string;
   service: string;
   timeId?: string | null;

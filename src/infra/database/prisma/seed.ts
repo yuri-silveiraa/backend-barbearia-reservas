@@ -339,6 +339,7 @@ async function seedAppointments(
         customerName: randomClient.user.customer.name,
         customerWhatsapp: randomClient.user.customer.whatsapp,
         barberName: barber.user.name,
+        barberWhatsapp: barber.user.telephone,
         serviceName: randomService.name,
         scheduledAt: time.date,
         status,

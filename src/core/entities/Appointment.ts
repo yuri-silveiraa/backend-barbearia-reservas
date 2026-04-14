@@ -10,6 +10,7 @@ export class Appointment {
     public customerName: string,
     public customerWhatsapp: string,
     public barberName: string,
+    public barberWhatsapp: string | null,
     public serviceName: string,
     public scheduledAt: Date,
     public readonly clientId?: string | null,

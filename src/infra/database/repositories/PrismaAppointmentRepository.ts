@@ -16,7 +16,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
         tx.service.findUnique({ where: { id: data.serviceId } }),
         tx.barber.findUnique({
           where: { id: data.barberId },
-          include: { user: { select: { name: true } } },
+          include: { user: { select: { name: true, telephone: true } } },
         }),
         tx.time.findUnique({ where: { id: data.timeId } }),
       ]);
@@ -52,6 +52,7 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
           customerName: customer.name,
           customerWhatsapp: customer.whatsapp,
           barberName: barber.user.name,
+          barberWhatsapp: barber.user.telephone || null,
           serviceName: service.name,
           scheduledAt: time.date,
         },
@@ -201,6 +202,7 @@ const appointmentSelect = {
   customerName: true,
   customerWhatsapp: true,
   barberName: true,
+  barberWhatsapp: true,
   serviceName: true,
   scheduledAt: true,
 } as const;
@@ -217,6 +219,7 @@ function toAppointmentDTO(appointment: {
   customerName: string;
   customerWhatsapp: string;
   barberName: string;
+  barberWhatsapp: string | null;
   serviceName: string;
   scheduledAt: Date;
 }): AppointmentDTO {
@@ -229,6 +232,7 @@ function toAppointmentDTO(appointment: {
     client: appointment.customerName,
     clientTelephone: appointment.customerWhatsapp,
     barber: appointment.barberName,
+    barberTelephone: appointment.barberWhatsapp,
     service: appointment.serviceName,
     timeId: appointment.timeId,
     time: appointment.scheduledAt,
