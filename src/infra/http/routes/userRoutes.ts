@@ -26,6 +26,9 @@ import { PrismaClientRepository } from "../../database/repositories/PrismaClient
 import { PrismaAppointmentRepository } from "../../database/repositories/PrismaAppointmentRepository";
 import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
 import { GetUserProfileImageController } from "../controllers/users/GetUserProfileImageController";
+import { ChangeUserPassword } from "../../../core/use-cases/ChangeUserPassword";
+import { ChangeUserPasswordController } from "../controllers/users/ChangeUserPasswordController";
+import { ChangeUserPasswordSchema } from "../schemas/input/ChangeUserPassword.schema";
 
 const userRoutes = Router();
 
@@ -51,6 +54,8 @@ const resendEmailCodeController = new ResendEmailCodeController(resendEmailCode)
 
 const updateUser = new UpdateUser(userRepo);
 const updateUserController = new UpdateUserController(updateUser);
+const changeUserPassword = new ChangeUserPassword(userRepo);
+const changeUserPasswordController = new ChangeUserPasswordController(changeUserPassword);
 
 const clientRepo = new PrismaClientRepository();
 const appointmentRepo = new PrismaAppointmentRepository();
@@ -98,6 +103,13 @@ userRoutes.patch(
   ensureAuthenticated,
   validate(UpdateUserSchema),
   (req, res) => updateUserController.handle(req as AuthenticatedRequest, res)
+);
+
+userRoutes.patch(
+  "/me/password",
+  ensureAuthenticated,
+  validate(ChangeUserPasswordSchema),
+  (req, res) => changeUserPasswordController.handle(req as AuthenticatedRequest, res)
 );
 
 userRoutes.delete(

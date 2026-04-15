@@ -34,6 +34,7 @@ describe("GetMeUserController", () => {
       email: "yuri@teste.com",
       type: "CLIENT",
       profileImageUrl: null,
+      hasPassword: false,
       createdAt: expect.any(Date),
     });
   });

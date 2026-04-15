@@ -19,6 +19,7 @@ export function toUserResponse(user: UserWithProfileImage) {
 
   return {
     ...userWithoutSensitiveData,
+    hasPassword: Boolean(password),
     profileImageUrl: profileImageUrlFor(user.id, Boolean(profileImageData && profileImageMimeType)),
   };
 }
