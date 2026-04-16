@@ -1,6 +1,5 @@
-import { AppointmentDTO } from "../dtos/AppointmentDTO";
 import { ClientNotFoundError } from "../errors/ClientNotFoundError";
-import { IAppointmentsRepository } from "../repositories/IAppointmentRepository";
+import { IAppointmentsRepository, PaginatedAppointments } from "../repositories/IAppointmentRepository";
 import { IClientsRepository } from "../repositories/IClientRepository";
 
 export class ListClientAppointments {
@@ -9,12 +8,12 @@ export class ListClientAppointments {
     private clientRepository: IClientsRepository,
   ) {}
 
-  async execute(id: string): Promise<AppointmentDTO[]> {
+  async execute(id: string, page = 1, limit = 10): Promise<PaginatedAppointments> {
     const client = await this.clientRepository.findByUserId(id);
     if (!client) {
       throw new ClientNotFoundError();
     }
-    const appointment = await this.appointmentsRepository.findByClientId(client.id);
+    const appointment = await this.appointmentsRepository.findByClientId(client.id, page, limit);
 
     return appointment;
   }
