@@ -3,13 +3,11 @@ import { NoAuthorizationError } from "../errors/NoAuthorizationError";
 import { IAppointmentsRepository } from "../repositories/IAppointmentRepository";
 import { IClientsRepository } from "../repositories/IClientRepository";
 import { IBarbersRepository } from "../repositories/IBarberRepository";
-import { ITimeRepository } from "../repositories/ITimeRepository";
 
 export class CanceledAppointment {
   constructor(
     private appointmentRepository: IAppointmentsRepository,
     private clientRepository: IClientsRepository,
-    private timeRepository: ITimeRepository,
     private barberRepository: IBarbersRepository,
   ) {}
 
@@ -40,8 +38,5 @@ export class CanceledAppointment {
     }
 
     await this.appointmentRepository.canceled(appointmentId);
-    if (appointment.timeId) {
-      await this.timeRepository.updateDisponible(appointment.timeId, true);
-    }
   }
 }

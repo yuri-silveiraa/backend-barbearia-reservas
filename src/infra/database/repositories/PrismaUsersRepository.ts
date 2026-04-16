@@ -68,7 +68,7 @@ export class PrismaUsersRepository implements IUserRepository {
           data: { isActive: false },
         });
         await tx.time.deleteMany({
-          where: { barberId: user.barber.id, appointments: { none: {} } },
+          where: { barberId: user.barber.id },
         });
       }
 

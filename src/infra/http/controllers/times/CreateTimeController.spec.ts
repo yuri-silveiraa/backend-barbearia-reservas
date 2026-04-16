@@ -1,15 +1,16 @@
 import { CreateTimeController } from "./CreateTimeController";
-import { CreateTime } from "../../../../core/use-cases/CreateTime";
 import { mockRequest, mockResponse } from "../../../../tests/utils/MockExpress";
 
 describe("CreateTimeController", () => {
-  it("deve criar um horário com sucesso", async () => {
+  it("deve criar uma jornada com sucesso", async () => {
     const mockCreateTime = {
       execute: jest.fn().mockResolvedValue({
         id: "1",
         barberId: "barber-1",
-        date: new Date("2024-12-25T10:00:00"),
-        disponible: true,
+        startAt: new Date("2030-04-10T08:00:00.000Z"),
+        endAt: new Date("2030-04-10T18:00:00.000Z"),
+        breakStartAt: null,
+        breakEndAt: null,
       }),
     };
 
@@ -18,7 +19,8 @@ describe("CreateTimeController", () => {
     const req = mockRequest({
       user: { id: "barber-1" },
       body: {
-        date: "2024-12-25T10:00:00",
+        startAt: "2030-04-10T08:00:00.000Z",
+        endAt: "2030-04-10T18:00:00.000Z",
       },
     });
 
@@ -28,27 +30,25 @@ describe("CreateTimeController", () => {
 
     expect(mockCreateTime.execute).toHaveBeenCalledWith({
       barberId: "barber-1",
-      date: "2024-12-25T10:00:00",
+      startAt: new Date("2030-04-10T08:00:00.000Z"),
+      endAt: new Date("2030-04-10T18:00:00.000Z"),
+      breakStartAt: null,
+      breakEndAt: null,
     });
 
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      id: "1",
-      disponible: true,
-    }));
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ id: "1" }));
   });
 
-  it("deve propagar erro se falhar ao criar horário", async () => {
-    const mockCreateTime = {
-      execute: jest.fn().mockRejectedValue(new Error("Erro ao criar horário")),
-    };
-
+  it("deve propagar erro se falhar ao criar jornada", async () => {
+    const mockCreateTime = { execute: jest.fn().mockRejectedValue(new Error("Erro ao criar horário")) };
     const controller = new CreateTimeController(mockCreateTime as any);
 
     const req = mockRequest({
       user: { id: "barber-1" },
       body: {
-        date: "2024-12-25T10:00:00",
+        startAt: "2030-04-10T08:00:00.000Z",
+        endAt: "2030-04-10T18:00:00.000Z",
       },
     });
 

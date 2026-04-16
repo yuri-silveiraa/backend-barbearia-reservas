@@ -11,7 +11,7 @@ export class CreateManualAppointmentController {
       customerName: req.body.customerName,
       customerWhatsapp: req.body.customerWhatsapp,
       serviceId: req.body.serviceId,
-      timeId: req.body.timeId,
+      startAt: req.body.startAt,
     });
 
     return res.status(201).send(appointment);

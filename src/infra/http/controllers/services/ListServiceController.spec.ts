@@ -11,21 +11,26 @@ describe("ListServiceController", () => {
           name: "Corte Tradicional",
           description: "Corte masculino tradicional",
           price: 35,
+          barberId: "barber-1",
+          durationMinutes: 45,
         },
         {
           id: "2",
           name: "Barba Completa",
           description: "Modelagem e acabamento da barba",
           price: 30,
+          barberId: "barber-1",
+          durationMinutes: 30,
         },
       ]),
     };
 
     const controller = new ListServiceController(mockListService as any);
 
+    const req = { query: {} } as any;
     const res = mockResponse();
 
-    await controller.handle(res);
+    await controller.handle(req, res);
 
     expect(mockListService.execute).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
@@ -42,9 +47,10 @@ describe("ListServiceController", () => {
 
     const controller = new ListServiceController(mockListService as any);
 
+    const req = { query: {} } as any;
     const res = mockResponse();
 
-    await controller.handle(res);
+    await controller.handle(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith([]);

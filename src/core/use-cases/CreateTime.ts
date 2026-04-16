@@ -11,6 +11,9 @@ export class CreateTime {
 
   async execute(data: CreateTimeDTO): Promise<Time> {
     const barber = await this.barberRepository.findByUserId(data.barberId);
+    if (!barber) {
+      throw new Error("Barbeiro não encontrado");
+    }
     data.barberId = barber.id;
     const time = await this.timeRepository.create(data);
     

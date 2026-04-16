@@ -1,11 +1,10 @@
-import { response, Router } from "express";
+import { Router } from "express";
 import { CreateServiceController } from "../controllers/services/CreateServiceController";
 import { CreateService } from "../../../core/use-cases/CreateService";
 import { PrismaServiceRepository } from "../../database/repositories/PrismaServiceRepository";
 import { PrismaBarberRepository } from "../../database/repositories/PrismaBarberReposiry";
 import { AuthenticatedRequest } from "../helpers/requestInterface";
-import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
-import { ensureAdmin } from "../middlewares/ensureRole";
+import { ensureBarber } from "../middlewares/ensureRole";
 import { validate } from "../middlewares/validate";
 import { CreateServiceSchema } from "../schemas/input/CreateService.schema";
 import { ListService } from "../../../core/use-cases/ListService";
@@ -22,7 +21,7 @@ const serviceRepo = new PrismaServiceRepository();
 const barberRepo = new PrismaBarberRepository();
 const createService = new CreateService(serviceRepo, barberRepo);
 const listService = new ListService(serviceRepo);
-const updateService = new UpdateService(serviceRepo);
+const updateService = new UpdateService(serviceRepo, barberRepo);
 const createServiceController = new CreateServiceController(createService);
 const listServiceController = new ListServiceController(listService);
 const updateServiceController = new UpdateServiceController(updateService);
@@ -30,15 +29,42 @@ const getServiceImageController = new GetServiceImageController(serviceRepo);
 
 serviceRoutes.post(
   "/create",
-  ensureAuthenticated,
-  ensureAdmin,
+  ensureBarber,
   validate(CreateServiceSchema),
   (req, res) => createServiceController.handle(req as AuthenticatedRequest, res)
 );
 
 serviceRoutes.get(
   "/",
-  (req, res) => listServiceController.handle(res)
+  (req, res) => listServiceController.handle(req, res)
+);
+
+serviceRoutes.get(
+  "/my-services",
+  ensureBarber,
+  async (req, res) => {
+    try {
+      const barberId = (req as AuthenticatedRequest).user.barberId;
+      const services = await listService.execute(barberId);
+      return res.status(200).json(services.map((service) => ({
+        id: service.id,
+        barberId: service.barberId,
+        nome: service.name,
+        name: service.name,
+        preço: service.price,
+        price: service.price,
+        duration: service.durationMinutes,
+        durationMinutes: service.durationMinutes,
+        descrição: service.description,
+        description: service.description,
+        imagemUrl: service.imageUrl,
+        imageUrl: service.imageUrl,
+      })));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao listar serviços";
+      return res.status(400).json({ message });
+    }
+  }
 );
 
 serviceRoutes.get(
@@ -48,23 +74,35 @@ serviceRoutes.get(
 
 serviceRoutes.put(
   "/:id",
-  ensureAuthenticated,
-  ensureAdmin,
+  ensureBarber,
   (req, res) => updateServiceController.handle(req as AuthenticatedRequest, res)
 );
 
 serviceRoutes.delete(
   "/:id",
-  ensureAuthenticated,
-  ensureAdmin,
-  (req, res) => {
+  ensureBarber,
+  async (req, res) => {
     const { id } = req.params;
     if (!id || Array.isArray(id)) {
       return res.status(400).json({ message: "ID inválido" });
     }
-    return serviceRepo.deleteById(id)
-      .then(() => res.status(204).send())
-      .catch((error) => res.status(400).json({ message: error.message }));
+
+    try {
+      const barber = await barberRepo.findByUserId((req as AuthenticatedRequest).user.id);
+      const service = await serviceRepo.findById(id);
+      if (!barber || !service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      if (service.barberId !== barber.id) {
+        return res.status(403).json({ message: "Serviço não pertence ao barbeiro autenticado" });
+      }
+
+      await serviceRepo.deleteById(id);
+      return res.status(204).send();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao excluir serviço";
+      return res.status(400).json({ message });
+    }
   }
 );
 

@@ -2,8 +2,9 @@ export class Time {
   constructor(
     public readonly id: string,
     public readonly barberId: string,
-    public date: Date,
-    public disponible: boolean = true,
-    public duration: number = 60
+    public startAt: Date,
+    public endAt: Date,
+    public breakStartAt?: Date | null,
+    public breakEndAt?: Date | null,
   ) {}
 }

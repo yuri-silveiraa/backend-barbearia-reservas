@@ -3,5 +3,5 @@ export interface CreateManualAppointmentDTO {
   customerName: string;
   customerWhatsapp: string;
   serviceId: string;
-  timeId: string;
+  startAt: string;
 }

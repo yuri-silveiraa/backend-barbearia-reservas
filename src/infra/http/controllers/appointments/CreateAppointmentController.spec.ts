@@ -1,5 +1,4 @@
 import { CreateAppointmentController } from "./CreateAppointmentController";
-import { CreateAppointment } from "../../../../core/use-cases/CreateAppointment";
 import { mockRequest, mockResponse } from "../../../../tests/utils/MockExpress";
 
 describe("CreateAppointmentController", () => {
@@ -10,7 +9,9 @@ describe("CreateAppointmentController", () => {
         barberId: "barber-1",
         clientId: "client-1",
         serviceId: "service-1",
-        timeId: "time-1",
+        scheduledAt: new Date("2030-04-10T10:00:00.000Z"),
+        scheduledEndAt: new Date("2030-04-10T10:30:00.000Z"),
+        serviceDurationMinutes: 30,
         status: "SCHEDULED",
         createdAt: new Date(),
       }),
@@ -23,7 +24,7 @@ describe("CreateAppointmentController", () => {
       body: {
         barberId: "barber-1",
         serviceId: "service-1",
-        timeId: "time-1",
+        startAt: "2030-04-10T10:00:00.000Z",
       },
     });
 
@@ -35,7 +36,7 @@ describe("CreateAppointmentController", () => {
       barberId: "barber-1",
       clientId: "client-1",
       serviceId: "service-1",
-      timeId: "time-1",
+      startAt: "2030-04-10T10:00:00.000Z",
     });
 
     expect(res.status).toHaveBeenCalledWith(201);
@@ -46,10 +47,7 @@ describe("CreateAppointmentController", () => {
   });
 
   it("deve retornar 401 se o usuário não estiver autenticado", async () => {
-    const mockCreateAppointment = {
-      execute: jest.fn(),
-    };
-
+    const mockCreateAppointment = { execute: jest.fn() };
     const controller = new CreateAppointmentController(mockCreateAppointment as any);
 
     const req = mockRequest({
@@ -57,7 +55,7 @@ describe("CreateAppointmentController", () => {
       body: {
         barberId: "barber-1",
         serviceId: "service-1",
-        timeId: "time-1",
+        startAt: "2030-04-10T10:00:00.000Z",
       },
     });
 

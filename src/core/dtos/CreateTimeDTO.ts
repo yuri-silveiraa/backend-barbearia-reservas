@@ -1,4 +1,7 @@
 export interface CreateTimeDTO {
   barberId: string;
-  date: Date;
+  startAt: Date;
+  endAt: Date;
+  breakStartAt?: Date | null;
+  breakEndAt?: Date | null;
 }

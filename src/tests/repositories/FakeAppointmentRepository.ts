@@ -5,8 +5,9 @@ import { CreateAppointmentRepositoryDTO, IAppointmentsRepository } from "../../c
 export class FakeAppointmentRepository implements IAppointmentsRepository {
   private appointments: Appointment[] = [];
 
-  async create(data: CreateAppointmentRepositoryDTO): Promise<Appointment> {
-    const scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  async create(data: CreateAppointmentRepositoryDTO | (Omit<CreateAppointmentRepositoryDTO, "startAt"> & { timeId?: string; startAt?: Date })): Promise<Appointment> {
+    const scheduledAt = data.startAt ?? new Date("2030-04-10T10:00:00.000Z");
+    const serviceDurationMinutes = 30;
     const appointment: Appointment = {
       id: String(this.appointments.length + 1),
       barberId: data.barberId,
@@ -18,8 +19,9 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
       barberWhatsapp: "11999999999",
       serviceId: data.serviceId,
       serviceName: "Service Name",
-      timeId: data.timeId,
       scheduledAt,
+      scheduledEndAt: new Date(scheduledAt.getTime() + serviceDurationMinutes * 60 * 1000),
+      serviceDurationMinutes,
       price: data.price ?? 0,
       status: "SCHEDULED",
       createdAt: new Date(),
@@ -54,6 +56,17 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
         a.scheduledAt >= startDate &&
         a.scheduledAt <= endDate &&
         (!serviceId || a.serviceId === serviceId)
+      )
+      .map(a => this.toDTO(a));
+  }
+
+  async findScheduledByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]> {
+    return this.appointments
+      .filter(a =>
+        a.barberId === barberId &&
+        a.status === "SCHEDULED" &&
+        a.scheduledAt < endDate &&
+        a.scheduledEndAt > startDate
       )
       .map(a => this.toDTO(a));
   }
@@ -119,13 +132,14 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
       customerId: appointment.customerId,
       barberId: appointment.barberId,
       serviceId: appointment.serviceId,
-      timeId: appointment.timeId,
       client: appointment.customerName,
       clientTelephone: appointment.customerWhatsapp,
       barber: appointment.barberName,
       barberTelephone: appointment.barberWhatsapp,
       service: appointment.serviceName,
       time: appointment.scheduledAt,
+      endTime: appointment.scheduledEndAt,
+      serviceDurationMinutes: appointment.serviceDurationMinutes,
       price: appointment.price,
       status: appointment.status,
     };

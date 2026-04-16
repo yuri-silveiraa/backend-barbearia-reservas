@@ -31,19 +31,20 @@ export async function sendDailyWhatsappReminders() {
   const appointments = await prisma.appointment.findMany({
     where: {
       status: "SCHEDULED",
-      time: { date: { gte: startOfDay, lte: endOfDay } },
+      clientId: { not: null },
+      scheduledAt: { gte: startOfDay, lte: endOfDay },
     },
     select: {
       id: true,
-      time: { select: { date: true } },
-      service: { select: { name: true } },
+      scheduledAt: true,
+      serviceName: true,
       client: { select: { user: { select: { name: true, telephone: true } } } },
     },
   });
 
   for (const appointment of appointments) {
     const name = appointment.client.user.name;
-    const service = appointment.service.name;
+    const service = appointment.serviceName;
     const phone = appointment.client.user.telephone;
     const to = formatPhoneE164(phone);
 
@@ -52,7 +53,7 @@ export async function sendDailyWhatsappReminders() {
       continue;
     }
 
-    const time = DateTime.fromJSDate(appointment.time.date)
+    const time = DateTime.fromJSDate(appointment.scheduledAt)
       .setZone("America/Sao_Paulo")
       .toFormat("HH:mm");
 

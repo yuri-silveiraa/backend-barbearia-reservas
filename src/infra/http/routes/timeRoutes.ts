@@ -17,11 +17,15 @@ import { ListAvailableTimeSlots } from "../../../core/use-cases/ListAvailableTim
 
 import { DeleteTimeSlotController } from "../controllers/times/DeleteTimeSlotController";
 import { DeleteTimeSlot } from "../../../core/use-cases/DeleteTimeSlot";
+import { PrismaServiceRepository } from "../../database/repositories/PrismaServiceRepository";
+import { PrismaAppointmentRepository } from "../../database/repositories/PrismaAppointmentRepository";
 
 const timeRoutes = Router();
 
 const timeRepo = new PrismaTimeRepository();
 const barberRepo = new PrismaBarberRepository();
+const serviceRepo = new PrismaServiceRepository();
+const appointmentRepo = new PrismaAppointmentRepository();
 
 const generateTimeSlots = new GenerateTimeSlots(timeRepo, barberRepo);
 const generateTimeSlotsController = new GenerateTimeSlotsController(generateTimeSlots);
@@ -29,7 +33,7 @@ const generateTimeSlotsController = new GenerateTimeSlotsController(generateTime
 const listMyTimeSlots = new ListMyTimeSlots(timeRepo, barberRepo);
 const listMyTimeSlotsController = new ListMyTimeSlotsController(listMyTimeSlots);
 
-const listAvailableTimeSlots = new ListAvailableTimeSlots(timeRepo);
+const listAvailableTimeSlots = new ListAvailableTimeSlots(timeRepo, serviceRepo, appointmentRepo);
 const listAvailableTimeSlotsController = new ListAvailableTimeSlotsController(listAvailableTimeSlots);
 
 const deleteTimeSlot = new DeleteTimeSlot(timeRepo, barberRepo);

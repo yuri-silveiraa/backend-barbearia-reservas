@@ -8,13 +8,17 @@ describe("ListTimeDisponibleController", () => {
       execute: jest.fn().mockResolvedValue([
         {
           id: "1",
-          date: new Date("2024-12-25T10:00:00"),
-          disponible: true,
+          startAt: new Date("2030-04-10T08:00:00.000Z"),
+          endAt: new Date("2030-04-10T18:00:00.000Z"),
+          breakStartAt: null,
+          breakEndAt: null,
         },
         {
           id: "2",
-          date: new Date("2024-12-25T11:00:00"),
-          disponible: true,
+          startAt: new Date("2030-04-11T08:00:00.000Z"),
+          endAt: new Date("2030-04-11T18:00:00.000Z"),
+          breakStartAt: null,
+          breakEndAt: null,
         },
       ]),
     };

@@ -11,33 +11,63 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     }
 
     return await prisma.$transaction(async (tx) => {
-      const [customer, service, barber, time] = await Promise.all([
+      const [customer, barber] = await Promise.all([
         tx.customer.findUnique({ where: { id: data.customerId } }),
-        tx.service.findUnique({ where: { id: data.serviceId } }),
         tx.barber.findUnique({
           where: { id: data.barberId },
           include: { user: { select: { name: true, telephone: true } } },
         }),
-        tx.time.findUnique({ where: { id: data.timeId } }),
       ]);
 
       if (!customer) throw new AppError("Cliente não encontrado", 404);
-      if (!service) throw new AppError("Serviço não encontrado", 404);
       if (!barber) throw new AppError("Barbeiro não encontrado", 404);
-      if (!time) throw new AppError("Horário não encontrado", 404);
 
-      const reservedTime = await tx.time.updateMany({
+      const services = await tx.service.findMany({
+        where: { id: { in: data.serviceIds } },
+      });
+
+      if (services.length !== data.serviceIds.length) {
+        throw new AppError("Um ou mais serviços não encontrados", 404);
+      }
+
+      const totalDuration = data.totalDuration ?? services.reduce((sum, s) => sum + s.durationMinutes, 0);
+      const totalPrice = data.totalPrice ?? services.reduce((sum, s) => sum + s.price, 0);
+      const serviceNames = data.serviceNames ?? services.map(s => s.name);
+      const serviceDurations = data.serviceDurations ?? services.map(s => s.durationMinutes);
+
+      const scheduledEndAt = new Date(data.startAt.getTime() + totalDuration * 60 * 1000);
+
+      const availability = await tx.time.findFirst({
         where: {
-          id: data.timeId,
           barberId: data.barberId,
-          disponible: true,
-        },
-        data: {
-          disponible: false,
+          startAt: { lte: data.startAt },
+          endAt: { gte: scheduledEndAt },
         },
       });
 
-      if (reservedTime.count === 0) {
+      if (!availability) {
+        throw new AppError("Horário indisponível para este barbeiro", 409);
+      }
+
+      if (
+        availability.breakStartAt &&
+        availability.breakEndAt &&
+        data.startAt < availability.breakEndAt &&
+        scheduledEndAt > availability.breakStartAt
+      ) {
+        throw new AppError("Horário indisponível para este barbeiro", 409);
+      }
+
+      const conflictingAppointment = await tx.appointment.findFirst({
+        where: {
+          barberId: data.barberId,
+          status: "SCHEDULED",
+          scheduledAt: { lt: scheduledEndAt },
+          scheduledEndAt: { gt: data.startAt },
+        },
+      });
+
+      if (conflictingAppointment) {
         throw new AppError("Horário indisponível para este barbeiro", 409);
       }
 
@@ -46,33 +76,60 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
           barberId: data.barberId,
           clientId: data.clientId ?? null,
           customerId: data.customerId,
-          serviceId: data.serviceId,
-          timeId: data.timeId,
-          price: service.price,
+          serviceId: data.serviceIds[0],
+          serviceIds: data.serviceIds,
+          price: totalPrice,
           customerName: customer.name,
           customerWhatsapp: customer.whatsapp,
           barberName: barber.user.name,
           barberWhatsapp: barber.user.telephone || null,
-          serviceName: service.name,
-          scheduledAt: time.date,
+          serviceName: serviceNames[0],
+          serviceNames: serviceNames,
+          scheduledAt: data.startAt,
+          scheduledEndAt,
+          serviceDurationMinutes: totalDuration,
+          serviceDurations: serviceDurations,
         },
       });
     });
   }
 
-  async findByClientId(clientId: string): Promise<AppointmentDTO[]> {
-    const appointments = await prisma.appointment.findMany({
-      where: { clientId },
-      select: appointmentSelect,
-      orderBy: { scheduledAt: "asc" },
-    });
+  async findByClientId(clientId: string, page = 1, limit = 10): Promise<{ data: AppointmentDTO[], total: number, page: number, totalPages: number }> {
+    const skip = (page - 1) * limit;
+    
+    const [appointments, total] = await Promise.all([
+      prisma.appointment.findMany({
+        where: { 
+          clientId,
+          status: { not: "CANCELED" }
+        },
+        select: appointmentSelect,
+        orderBy: { scheduledAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.appointment.count({
+        where: { 
+          clientId,
+          status: { not: "CANCELED" }
+        }
+      })
+    ]);
 
-    return appointments.map(toAppointmentDTO);
+    return {
+      data: appointments.map(toAppointmentDTO),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findByCustomerId(customerId: string): Promise<AppointmentDTO[]> {
     const appointments = await prisma.appointment.findMany({
-      where: { customerId },
+      where: { 
+        customerId,
+        status: { not: "CANCELED" }
+      },
       select: appointmentSelect,
       orderBy: { scheduledAt: "asc" },
     });
@@ -125,6 +182,21 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
         barberId,
         ...(serviceId && { serviceId }),
         scheduledAt: { gte: startDate, lte: endDate },
+      },
+      select: appointmentSelect,
+      orderBy: { scheduledAt: "asc" },
+    });
+
+    return appointments.map(toAppointmentDTO);
+  }
+
+  async findScheduledByBarberIdRange(barberId: string, startDate: Date, endDate: Date): Promise<AppointmentDTO[]> {
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        barberId,
+        status: "SCHEDULED",
+        scheduledAt: { lt: endDate },
+        scheduledEndAt: { gt: startDate },
       },
       select: appointmentSelect,
       orderBy: { scheduledAt: "asc" },
@@ -197,14 +269,17 @@ const appointmentSelect = {
   customerId: true,
   barberId: true,
   serviceId: true,
-  timeId: true,
   price: true,
   customerName: true,
   customerWhatsapp: true,
   barberName: true,
   barberWhatsapp: true,
   serviceName: true,
+  serviceNames: true,
   scheduledAt: true,
+  scheduledEndAt: true,
+  serviceDurationMinutes: true,
+  serviceDurations: true,
 } as const;
 
 function toAppointmentDTO(appointment: {
@@ -214,14 +289,17 @@ function toAppointmentDTO(appointment: {
   customerId: string;
   barberId: string;
   serviceId: string;
-  timeId: string | null;
   price: number;
   customerName: string;
   customerWhatsapp: string;
   barberName: string;
   barberWhatsapp: string | null;
   serviceName: string;
+  serviceNames: string[];
   scheduledAt: Date;
+  scheduledEndAt: Date;
+  serviceDurationMinutes: number;
+  serviceDurations: number[];
 }): AppointmentDTO {
   return {
     id: appointment.id,
@@ -234,8 +312,11 @@ function toAppointmentDTO(appointment: {
     barber: appointment.barberName,
     barberTelephone: appointment.barberWhatsapp,
     service: appointment.serviceName,
-    timeId: appointment.timeId,
+    serviceNames: appointment.serviceNames?.length ? appointment.serviceNames : undefined,
     time: appointment.scheduledAt,
+    endTime: appointment.scheduledEndAt,
+    serviceDurationMinutes: appointment.serviceDurationMinutes,
+    serviceDurations: appointment.serviceDurations?.length ? appointment.serviceDurations : undefined,
     price: appointment.price,
     status: appointment.status,
   };

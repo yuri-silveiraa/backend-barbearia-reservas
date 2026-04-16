@@ -46,6 +46,7 @@ model Barber {
   createdAt DateTime @default(now())
   appointments Appointment[]
   times     Time[]
+  services  Service[]
 }
 
 model Client {
@@ -72,20 +73,25 @@ model Service {
   name        String
   description String?
   price       Float
+  durationMinutes Int   @default(30)
   imageData   Bytes?
   imageMimeType String?
   active      Boolean  @default(true)
+  barberId    String
+  barber      Barber   @relation(fields: [barberId], references: [id])
   appointments Appointment[]
 }
 
 model Time {
   id         String   @id @default(uuid())
-  disponible Boolean  @default(true)
-  date       DateTime
-  duration   Int      @default(60)
+  startAt    DateTime
+  endAt      DateTime
+  breakStartAt DateTime?
+  breakEndAt DateTime?
   barberId   String
   barber     Barber   @relation(fields: [barberId], references: [id])
-  appointments Appointment[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Appointment {
@@ -95,18 +101,21 @@ model Appointment {
   clientId   String?
   customerId String
   serviceId  String
-  timeId     String?
+  serviceIds String[]
   price      Float
   customerName String
   customerWhatsapp String
   barberName String
   barberWhatsapp String?
   serviceName String
+  serviceNames String[]
   scheduledAt DateTime
+  scheduledEndAt DateTime
+  serviceDurationMinutes Int
+  serviceDurations Int[]
   service    Service    @relation(fields: [serviceId], references: [id])
   client     Client?    @relation(fields: [clientId], references: [id])
   customer   Customer   @relation(fields: [customerId], references: [id])
   barber     Barber     @relation(fields: [barberId], references: [id])
-  time       Time?      @relation(fields: [timeId], references: [id], onDelete: SetNull)
   createdAt  DateTime @default(now())
 }

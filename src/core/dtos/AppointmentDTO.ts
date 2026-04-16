@@ -9,8 +9,11 @@ export interface AppointmentDTO {
   barberTelephone?: string | null;
   serviceId: string;
   service: string;
-  timeId?: string | null;
+  serviceNames?: string[];
   time: Date;
+  endTime: Date;
+  serviceDurationMinutes: number;
+  serviceDurations?: number[];
   price: number;
   status: string;
 }

@@ -26,14 +26,13 @@ export class ToggleTimeSlot {
       throw new Error("Você não tem permissão para modificar este horário");
     }
 
-    const newDisponible = !timeSlot.disponible;
-    await this.timeRepository.updateDisponible(timeSlotId, newDisponible);
-
     return new Time(
       timeSlot.id,
       timeSlot.barberId,
-      timeSlot.date,
-      newDisponible
+      timeSlot.startAt,
+      timeSlot.endAt,
+      timeSlot.breakStartAt,
+      timeSlot.breakEndAt,
     );
   }
 }

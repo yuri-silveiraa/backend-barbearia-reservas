@@ -8,6 +8,8 @@ export class PrismaServiceRepository implements IServiceRepository {
       data: {
         name: data.name,
         price: data.price,
+        barberId: data.barberId,
+        durationMinutes: data.durationMinutes,
         description: data.description,
         imageData: data.imageData,
         imageMimeType: data.imageMimeType,
@@ -23,9 +25,31 @@ export class PrismaServiceRepository implements IServiceRepository {
     return service;
   }
 
-  async findAll(): Promise<Service[]> {
+  async findByIds(ids: string[]): Promise<Service[]> {
     const services = await prisma.service.findMany({
-      where: { active: true },
+      where: { id: { in: ids } },
+    });
+    return services;
+  }
+
+  async findAll(barberId?: string): Promise<Service[]> {
+    const services = await prisma.service.findMany({
+      where: {
+        active: true,
+        ...(barberId && { barberId }),
+      },
+      orderBy: { name: "asc" },
+    });
+    return services;
+  }
+
+  async findAdminServices(): Promise<Service[]> {
+    const services = await prisma.service.findMany({
+      where: {
+        active: true,
+        barber: { isAdmin: true, isActive: true },
+      },
+      orderBy: { name: "asc" },
     });
     return services;
   }
@@ -43,6 +67,7 @@ export class PrismaServiceRepository implements IServiceRepository {
       data: {
         ...(data.name && { name: data.name }),
         ...(data.price !== undefined && { price: data.price }),
+        ...(data.durationMinutes !== undefined && { durationMinutes: data.durationMinutes }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.imageData !== undefined && { imageData: data.imageData }),
         ...(data.imageMimeType !== undefined && { imageMimeType: data.imageMimeType }),

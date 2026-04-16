@@ -7,14 +7,14 @@ describe("ListTimeDisponible", () => {
   const barberRepository = new FakeBarberRepository();
   const sut = new ListTimeDisponible(timeRepository);
 
-  it("deve retornar null se não houver horários", async () => {
+  it("deve retornar array vazio se não houver jornadas", async () => {
     const barber = await barberRepository.create({ userId: "barber-1", isAdmin: false });
 
     const times = await sut.execute(barber.id);
-    expect(times).toBeNull();
+    expect(times).toEqual([]);
   });
 
-  it("deve listar horários disponíveis do barbeiro", async () => {
+  it("deve listar jornadas do barbeiro", async () => {
     const barber = await barberRepository.create({ userId: "barber-2", isAdmin: false });
 
     await timeRepository.create({
@@ -24,7 +24,6 @@ describe("ListTimeDisponible", () => {
 
     const times = await sut.execute(barber.id);
 
-    expect(times).not.toBeNull();
-    expect(times?.length).toBe(1);
+    expect(times).toHaveLength(1);
   });
 });

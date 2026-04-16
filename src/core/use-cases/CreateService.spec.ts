@@ -1,44 +1,43 @@
 import { CreateService } from "./CreateService";
 import { FakeServiceRepository } from "../../tests/repositories/FakeServiceRepository";
 import { FakeBarberRepository } from "../../tests/repositories/FakeBarberRepository";
-import { NoAuthorizationError } from "../errors/NoAuthorizationError";
 
 describe("CreateService", () => {
-  const serviceRepository = new FakeServiceRepository();
-  const barberRepository = new FakeBarberRepository();
-  const sut = new CreateService(serviceRepository, barberRepository);
+  let serviceRepository: FakeServiceRepository;
+  let barberRepository: FakeBarberRepository;
+  let sut: CreateService;
 
-  it("deve criar um serviço se o barbeiro for admin", async () => {
-    await barberRepository.create({
-      userId: "admin-user",
-      isAdmin: true,
-    });
+  beforeEach(() => {
+    serviceRepository = new FakeServiceRepository();
+    barberRepository = new FakeBarberRepository();
+    sut = new CreateService(serviceRepository, barberRepository);
+  });
+
+  it("deve criar um serviço próprio para um barbeiro ativo", async () => {
+    const barber = await barberRepository.create({ userId: "barber-user", isAdmin: false });
 
     const data = {
       name: "Corte Tradicional",
       description: "Corte masculino tradicional",
       price: 35,
+      durationMinutes: 45,
     };
 
-    const service = await sut.execute(data, "admin-user");
+    const service = await sut.execute(data, "barber-user");
 
     expect(service).toHaveProperty("id");
     expect(service.name).toBe(data.name);
     expect(service.price).toBe(data.price);
+    expect(service.durationMinutes).toBe(45);
+    expect(service.barberId).toBe(barber.id);
   });
 
-  it("deve lançar erro se o barbeiro não for admin", async () => {
-    await barberRepository.create({
-      userId: "barber-user",
-      isAdmin: false,
-    });
-
-    const data = {
+  it("deve lançar erro se o barbeiro não existir", async () => {
+    await expect(sut.execute({
       name: "Corte Tradicional",
       description: "Corte masculino tradicional",
       price: 35,
-    };
-
-    await expect(sut.execute(data, "barber-user")).rejects.toThrow(NoAuthorizationError);
+      durationMinutes: 45,
+    }, "missing-user")).rejects.toThrow("Barbeiro não encontrado");
   });
 });

@@ -2,7 +2,7 @@ import { CreateServiceDTO } from "../dtos/CreateServiceDTO";
 import { Service } from "../entities/Service";
 import { IBarbersRepository } from "../repositories/IBarberRepository";
 import { IServiceRepository } from "../repositories/IServiceRepository";
-import { NoAuthorizationError } from "../errors/NoAuthorizationError";
+import { AppError } from "../errors/AppError";
 
 function decodeBase64Image(imageBase64: string): Uint8Array<ArrayBuffer> {
   const nodeBuffer = Buffer.from(imageBase64, "base64");
@@ -19,12 +19,15 @@ export class CreateService {
   ) {}
   async execute(data: CreateServiceDTO, id: string): Promise<Service> {
     const barber = await this.barberRepository.findByUserId(id);
-    if (!barber.isAdmin) {
-      throw new NoAuthorizationError();
+    if (!barber || !barber.isActive) {
+      throw new AppError("Barbeiro não encontrado", 404);
     }
+
     const service = await this.serviceRepository.create({
       name: data.name,
       price: data.price,
+      barberId: barber.id,
+      durationMinutes: data.durationMinutes,
       description: data.description,
       imageData: data.imageBase64 ? decodeBase64Image(data.imageBase64) : undefined,
       imageMimeType: data.imageMimeType,

@@ -5,7 +5,6 @@ import { ClientScheduleSpacingError } from "../errors/ClientScheduleSpacingError
 import { IAppointmentsRepository } from "../repositories/IAppointmentRepository";
 import { IBarbersRepository } from "../repositories/IBarberRepository";
 import { ICustomerRepository } from "../repositories/ICustomerRepository";
-import { ITimeRepository } from "../repositories/ITimeRepository";
 import { assertCustomerName, assertWhatsapp } from "../utils/customerInput";
 
 export class CreateManualAppointment {
@@ -13,7 +12,6 @@ export class CreateManualAppointment {
     private appointmentRepository: IAppointmentsRepository,
     private barberRepository: IBarbersRepository,
     private customerRepository: ICustomerRepository,
-    private timeRepository: ITimeRepository,
   ) {}
 
   async execute(data: CreateManualAppointmentDTO): Promise<Appointment> {
@@ -27,20 +25,15 @@ export class CreateManualAppointment {
       whatsapp: assertWhatsapp(data.customerWhatsapp),
     });
 
-    const time = await this.timeRepository.findById(data.timeId);
-    if (!time) {
-      throw new AppError("Horário não encontrado", 404);
-    }
-    if (time.barberId !== barber.id) {
-      throw new AppError("Horário não pertence ao barbeiro autenticado", 403);
+    const startAt = new Date(data.startAt);
+    if (Number.isNaN(startAt.getTime())) {
+      throw new AppError("Horário inválido", 400);
     }
 
     const existingAppointments = await this.appointmentRepository.findByCustomerId(customer.id);
     for (const appointment of existingAppointments ?? []) {
       if (appointment.status !== "SCHEDULED") continue;
-      const scheduledTime = await this.timeRepository.findById(appointment.timeId);
-      if (!scheduledTime) continue;
-      const diff = Math.abs(scheduledTime.date.getTime() - time.date.getTime());
+      const diff = Math.abs(appointment.time.getTime() - startAt.getTime());
       if (diff < 7 * 24 * 60 * 60 * 1000) {
         throw new ClientScheduleSpacingError();
       }
@@ -49,7 +42,7 @@ export class CreateManualAppointment {
     return await this.appointmentRepository.create({
       barberId: barber.id,
       serviceId: data.serviceId,
-      timeId: data.timeId,
+      startAt,
       customerId: customer.id,
       clientId: null,
     });

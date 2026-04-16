@@ -1,4 +1,4 @@
-import { Time } from "@prisma/client";
+import { Time } from "../entities/Time";
 import { ITimeRepository } from "../repositories/ITimeRepository";
 
 export class ListTimeDisponible {
@@ -6,6 +6,6 @@ export class ListTimeDisponible {
 
   async execute(barberId: string): Promise<Time[]> {
     const times = await this.timeRepository.findByBarberId(barberId);
-    return times;
+    return times || [];
   }
 }

@@ -4,12 +4,14 @@ import { IServiceRepository } from "../../core/repositories/IServiceRepository";
 export class FakeServiceRepository implements IServiceRepository {
   private services: Service[] = [];
 
-  async create(data: Omit<Service, "id">): Promise<Service> {
+  async create(data: Omit<Service, "id"> | Partial<Omit<Service, "id">>): Promise<Service> {
     const service: Service = {
       id: String(this.services.length + 1),
-      name: data.name,
+      name: data.name ?? "Serviço",
       description: data.description,
-      price: data.price,
+      price: data.price ?? 0,
+      barberId: data.barberId ?? "1",
+      durationMinutes: data.durationMinutes ?? 30,
       imageData: data.imageData,
       imageMimeType: data.imageMimeType,
       active: data.active ?? true,
@@ -27,8 +29,12 @@ export class FakeServiceRepository implements IServiceRepository {
     this.services = this.services.filter(s => s.id !== id);
   }
 
-  async findAll(): Promise<Service[]> {
-    return this.services;
+  async findAll(barberId?: string): Promise<Service[]> {
+    return this.services.filter((service) => service.active !== false && (!barberId || service.barberId === barberId));
+  }
+
+  async findAdminServices(): Promise<Service[]> {
+    return this.services.filter((service) => service.active !== false);
   }
 
   async update(id: string, data: Partial<Service>): Promise<Service> {

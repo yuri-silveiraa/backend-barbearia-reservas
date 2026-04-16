@@ -6,9 +6,11 @@ export class PrismaTimeRepository implements ITimeRepository {
   async create(data: CreateTimeRepositoryDTO): Promise<Time> {
     const time = await prisma.time.create({
       data: {
-        date: data.date,
+        startAt: data.startAt,
+        endAt: data.endAt,
+        breakStartAt: data.breakStartAt ?? null,
+        breakEndAt: data.breakEndAt ?? null,
         barberId: data.barberId,
-        duration: data.duration ?? 60,
       }
     });
     return time;
@@ -19,17 +21,12 @@ export class PrismaTimeRepository implements ITimeRepository {
     const times = await prisma.time.findMany({
       where: { 
         barberId,
-        date: {
+        endAt: {
           gte: now,
-        },
-        NOT: {
-          appointments: {
-            some: {},
-          },
         },
       },
       orderBy: {
-        date: "asc",
+        startAt: "asc",
       }
     });
     return times;
@@ -39,32 +36,13 @@ export class PrismaTimeRepository implements ITimeRepository {
     return await prisma.time.findMany({
       where: {
         barberId,
-        date: {
-          gte: startDate,
-          lt: endDate,
-        },
+        startAt: { lt: endDate },
+        endAt: { gt: startDate },
       },
       orderBy: {
-        date: "asc",
+        startAt: "asc",
       },
     });
-  }
-
-  async findAvailableByBarberId(barberId: string): Promise<Time[] | null> {
-    const now = new Date();
-    const times = await prisma.time.findMany({
-      where: { 
-        barberId,
-        disponible: true,
-        date: {
-          gte: now,
-        },
-      },
-      orderBy: {
-        date: "asc",
-      }
-    });
-    return times;
   }
 
   async findById(timeId: string): Promise<Time | null> {
@@ -72,13 +50,6 @@ export class PrismaTimeRepository implements ITimeRepository {
       where: { id: timeId },
     });
     return time;
-  }
-
-  async updateDisponible(timeId: string, disponible: boolean): Promise<void> {
-    await prisma.time.update({
-      where: { id: timeId },
-      data: { disponible },
-    });
   }
 
   async deleteById(timeId: string): Promise<void> {

@@ -24,7 +24,6 @@ import { DeleteMeUser } from "../../../core/use-cases/DeleteMeUser";
 import { DeleteMeUserController } from "../controllers/users/DeleteMeUserController";
 import { PrismaClientRepository } from "../../database/repositories/PrismaClientRepository";
 import { PrismaAppointmentRepository } from "../../database/repositories/PrismaAppointmentRepository";
-import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
 import { GetUserProfileImageController } from "../controllers/users/GetUserProfileImageController";
 import { ChangeUserPassword } from "../../../core/use-cases/ChangeUserPassword";
 import { ChangeUserPasswordController } from "../controllers/users/ChangeUserPasswordController";
@@ -59,9 +58,8 @@ const changeUserPasswordController = new ChangeUserPasswordController(changeUser
 
 const clientRepo = new PrismaClientRepository();
 const appointmentRepo = new PrismaAppointmentRepository();
-const timeRepo = new PrismaTimeRepository();
 
-const deleteMeUser = new DeleteMeUser(userRepo, clientRepo, appointmentRepo, timeRepo);
+const deleteMeUser = new DeleteMeUser(userRepo, clientRepo, appointmentRepo);
 const deleteMeUserController = new DeleteMeUserController(deleteMeUser);
 
 userRoutes.post(

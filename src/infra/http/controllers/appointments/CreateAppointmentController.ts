@@ -13,11 +13,16 @@ export class CreateAppointmentController {
       return res.status(401).json({ message: "Usuário não autenticado" });
     }
 
+    const serviceIds = req.body.serviceIds;
+    if (!serviceIds || !Array.isArray(serviceIds) || serviceIds.length === 0) {
+      return res.status(400).json({ message: "Pelo menos um serviço deve ser selecionado" });
+    }
+
     const appointment = await this.createAppointment.execute({
       barberId: req.body.barberId,
       clientId: userId,
-      serviceId: req.body.serviceId,
-      timeId: req.body.timeId
+      serviceIds: serviceIds,
+      startAt: req.body.startAt,
     });
 
     return res.status(201).send(appointment);

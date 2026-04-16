@@ -21,7 +21,6 @@ import { ListBarberRevenueByRangeController } from "../controllers/barber/ListBa
 import { CreateManualAppointment } from "../../../core/use-cases/CreateManualAppointment";
 import { CreateManualAppointmentController } from "../controllers/barber/CreateManualAppointmentController";
 import { PrismaCustomerRepository } from "../../database/repositories/PrismaCustomerRepository";
-import { PrismaTimeRepository } from "../../database/repositories/PrismaTimeRepository";
 import { validate } from "../middlewares/validate";
 import { CreateManualAppointmentSchema } from "../schemas/input/CreateManualAppointment.schema";
 import { appointmentRateLimiter } from "../middlewares/rateLimit";
@@ -32,7 +31,6 @@ const barberRepo = new PrismaBarberRepository();
 const appointmentRepo = new PrismaAppointmentRepository();
 const userRepo = new PrismaUsersRepository();
 const customerRepo = new PrismaCustomerRepository();
-const timeRepo = new PrismaTimeRepository();
 
 const listBarber = new ListBarber(barberRepo);
 const listBarberController = new ListBarberController(listBarber);
@@ -49,7 +47,7 @@ const getBarberDailyStatsController = new GetBarberDailyStatsController(getBarbe
 const listBarberRevenueByRange = new ListBarberRevenueByRange(barberRepo, appointmentRepo);
 const listBarberRevenueByRangeController = new ListBarberRevenueByRangeController(listBarberRevenueByRange);
 
-const createManualAppointment = new CreateManualAppointment(appointmentRepo, barberRepo, customerRepo, timeRepo);
+const createManualAppointment = new CreateManualAppointment(appointmentRepo, barberRepo, customerRepo);
 const createManualAppointmentController = new CreateManualAppointmentController(createManualAppointment);
 
 const createBarber = new CreateBarber(userRepo, barberRepo);

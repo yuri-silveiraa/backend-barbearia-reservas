@@ -1,3 +1,6 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateEnum
 CREATE TYPE "UserType" AS ENUM ('BARBER', 'CLIENT');
 
@@ -63,9 +66,11 @@ CREATE TABLE "Service" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "price" DOUBLE PRECISION NOT NULL,
+    "durationMinutes" INTEGER NOT NULL DEFAULT 30,
     "imageData" BYTEA,
     "imageMimeType" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "barberId" TEXT NOT NULL,
 
     CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
 );
@@ -73,10 +78,13 @@ CREATE TABLE "Service" (
 -- CreateTable
 CREATE TABLE "Time" (
     "id" TEXT NOT NULL,
-    "disponible" BOOLEAN NOT NULL DEFAULT true,
-    "date" TIMESTAMP(3) NOT NULL,
-    "duration" INTEGER NOT NULL DEFAULT 60,
+    "startAt" TIMESTAMP(3) NOT NULL,
+    "endAt" TIMESTAMP(3) NOT NULL,
+    "breakStartAt" TIMESTAMP(3),
+    "breakEndAt" TIMESTAMP(3),
     "barberId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Time_pkey" PRIMARY KEY ("id")
 );
@@ -89,7 +97,6 @@ CREATE TABLE "Appointment" (
     "clientId" TEXT,
     "customerId" TEXT NOT NULL,
     "serviceId" TEXT NOT NULL,
-    "timeId" TEXT,
     "price" DOUBLE PRECISION NOT NULL,
     "customerName" TEXT NOT NULL,
     "customerWhatsapp" TEXT NOT NULL,
@@ -97,6 +104,8 @@ CREATE TABLE "Appointment" (
     "barberWhatsapp" TEXT,
     "serviceName" TEXT NOT NULL,
     "scheduledAt" TIMESTAMP(3) NOT NULL,
+    "scheduledEndAt" TIMESTAMP(3) NOT NULL,
+    "serviceDurationMinutes" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
@@ -133,6 +142,9 @@ ALTER TABLE "Client" ADD CONSTRAINT "Client_userId_fkey" FOREIGN KEY ("userId") 
 ALTER TABLE "Customer" ADD CONSTRAINT "Customer_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Service" ADD CONSTRAINT "Service_barberId_fkey" FOREIGN KEY ("barberId") REFERENCES "Barber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Time" ADD CONSTRAINT "Time_barberId_fkey" FOREIGN KEY ("barberId") REFERENCES "Barber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -146,6 +158,3 @@ ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_customerId_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_barberId_fkey" FOREIGN KEY ("barberId") REFERENCES "Barber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_timeId_fkey" FOREIGN KEY ("timeId") REFERENCES "Time"("id") ON DELETE SET NULL ON UPDATE CASCADE;

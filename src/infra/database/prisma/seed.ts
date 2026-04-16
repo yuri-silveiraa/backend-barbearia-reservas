@@ -22,7 +22,7 @@ type PublicSeedUser = {
 
 const CLIENT_USERS_TOTAL = 30;
 const MIN_SERVICE_ROWS = 5;
-const MIN_TIME_ROWS = 700;
+const MIN_TIME_ROWS = 120;
 const MIN_APPOINTMENT_ROWS = 300;
 const SEED_DAYS_WINDOW = 45;
 
@@ -170,6 +170,7 @@ async function upsertBarberProfile(userId: string, isAdmin: boolean) {
     update: { isAdmin, isActive: true },
     create: { userId, isAdmin, isActive: true },
   });
+  return barber;
 }
 
 async function upsertClientProfile(userId: string) {
@@ -189,9 +190,15 @@ async function upsertClientProfile(userId: string) {
   return client;
 }
 
-async function ensureService(name: string, description: string, price: number) {
+async function ensureService(
+  barberId: string,
+  name: string,
+  description: string,
+  price: number,
+  durationMinutes: number,
+) {
   const existing = await prisma.service.findFirst({
-    where: { name },
+    where: { name, barberId },
   });
 
   if (existing) return existing;
@@ -201,6 +208,8 @@ async function ensureService(name: string, description: string, price: number) {
       name,
       description,
       price,
+      durationMinutes,
+      barberId,
       imageData: serviceImages.scissors,
       imageMimeType: "image/svg+xml",
       active: true,
@@ -235,49 +244,65 @@ async function createClientUsers(total: number) {
   return created;
 }
 
-async function seedServices(total: number) {
+async function seedServices() {
+  const barbers = await prisma.barber.findMany({ include: { user: true } });
   const baseServices = [
     {
       name: "Corte Tradicional",
       description: "Corte masculino tradicional",
       price: 200,
+      durationMinutes: 30,
       imageData: serviceImages.scissors,
     },
     {
       name: "Barba Completa",
       description: "Modelagem e acabamento da barba",
       price: 200,
+      durationMinutes: 45,
       imageData: serviceImages.beard,
     },
     {
       name: "Corte + Barba",
       description: "Pacote completo",
       price: 200,
+      durationMinutes: 90,
       imageData: serviceImages.combo,
     },
     {
       name: "Pigmentacao",
       description: "Pigmentacao de barba/cabelo",
       price: 200,
+      durationMinutes: 60,
       imageData: serviceImages.pigment,
     },
     {
       name: "Sobrancelha",
       description: "Ajuste de sobrancelha",
       price: 200,
+      durationMinutes: 30,
       imageData: serviceImages.eyebrow,
     },
   ];
 
-  for (const service of baseServices) {
-    const existing = await ensureService(service.name, service.description, service.price);
-    await prisma.service.update({
-      where: { id: existing.id },
-      data: {
-        imageData: service.imageData,
-        imageMimeType: "image/svg+xml",
-      },
-    });
+  for (const barber of barbers) {
+    for (const [index, service] of baseServices.entries()) {
+      const barberDuration = barber.isAdmin ? service.durationMinutes : service.durationMinutes + (index % 2 === 0 ? 15 : 0);
+      const existing = await ensureService(
+        barber.id,
+        service.name,
+        service.description,
+        service.price,
+        barberDuration,
+      );
+      await prisma.service.update({
+        where: { id: existing.id },
+        data: {
+          durationMinutes: barberDuration,
+          imageData: service.imageData,
+          imageMimeType: "image/svg+xml",
+        },
+      });
+    }
   }
 }
 
@@ -285,29 +310,33 @@ async function seedTimes(total: number) {
   const barbers = await prisma.barber.findMany();
   if (!barbers.length) return [];
 
-  const createdTimes: Array<{ id: string; barberId: string; date: Date }> = [];
-  const slotHours = [8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19];
+  const createdTimes: Array<{ id: string; barberId: string; startAt: Date; endAt: Date }> = [];
   const dayOffsets = Array.from(
     { length: SEED_DAYS_WINDOW * 2 + 1 },
     (_, index) => index - SEED_DAYS_WINDOW
   );
 
-  for (let index = 0; index < total; index++) {
-    const slotCycle = Math.floor(index / dayOffsets.length);
-    const barber = barbers[slotCycle % barbers.length];
+  for (let index = 0; index < Math.min(total, dayOffsets.length * barbers.length); index++) {
+    const barber = barbers[index % barbers.length];
     const dayOffset = dayOffsets[index % dayOffsets.length];
-    const hour = slotHours[Math.floor(slotCycle / barbers.length) % slotHours.length];
-    const date = dateAtDayOffset(dayOffset, hour);
+    const startHour = barber.isAdmin ? 8 : 9;
+    const endHour = barber.isAdmin ? 18 : 20;
+    const startAt = dateAtDayOffset(dayOffset, startHour);
+    const endAt = dateAtDayOffset(dayOffset, endHour);
+    const breakStartAt = dateAtDayOffset(dayOffset, 12);
+    const breakEndAt = dateAtDayOffset(dayOffset, 13);
 
     const created = await prisma.time.create({
       data: {
         barberId: barber.id,
-        date,
-        disponible: true,
+        startAt,
+        endAt,
+        breakStartAt,
+        breakEndAt,
       },
     });
 
-    createdTimes.push({ id: created.id, barberId: created.barberId, date: created.date });
+    createdTimes.push({ id: created.id, barberId: created.barberId, startAt: created.startAt, endAt: created.endAt });
   }
 
   return createdTimes;
@@ -315,7 +344,7 @@ async function seedTimes(total: number) {
 
 async function seedAppointments(
   total: number,
-  createdTimes: Array<{ id: string; barberId: string; date: Date }>
+  createdTimes: Array<{ id: string; barberId: string; startAt: Date; endAt: Date }>
 ) {
   const clients = await prisma.client.findMany({ include: { user: { include: { customer: true } } } });
   const services = await prisma.service.findMany();
@@ -323,12 +352,12 @@ async function seedAppointments(
 
   if (!createdTimes.length || !clients.length || !services.length) return;
 
-  const sortedTimes = [...createdTimes].sort((a, b) => a.date.getTime() - b.date.getTime());
-  const pastTimes = sortedTimes.filter((time) => time.date < dateAtDayOffset(0, 0));
+  const sortedTimes = [...createdTimes].sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+  const pastTimes = sortedTimes.filter((time) => time.startAt < dateAtDayOffset(0, 0));
   const todayTimes = sortedTimes.filter(
-    (time) => time.date >= dateAtDayOffset(0, 0) && time.date < dateAtDayOffset(1, 0)
+    (time) => time.startAt >= dateAtDayOffset(0, 0) && time.startAt < dateAtDayOffset(1, 0)
   );
-  const futureTimes = sortedTimes.filter((time) => time.date >= dateAtDayOffset(1, 0));
+  const futureTimes = sortedTimes.filter((time) => time.startAt >= dateAtDayOffset(1, 0));
   const targetPast = Math.floor(total * 0.45);
   const targetToday = Math.min(todayTimes.length, Math.max(0, Math.floor(total * 0.1)));
   const targetFuture = total - targetPast - targetToday;
@@ -338,17 +367,36 @@ async function seedAppointments(
     ...futureTimes.slice(0, targetFuture),
   ].slice(0, total);
 
-  const appointmentsToCreate = Math.min(total, mixedTimes.length);
+  const usedStarts = new Set<string>();
+  const usedIntervals: Array<{ barberId: string; start: Date; end: Date }> = [];
+  const appointmentsToCreate = Math.min(total, mixedTimes.length * 3);
   for (let index = 0; index < appointmentsToCreate; index++) {
-    const time = mixedTimes[index];
+    const time = mixedTimes[index % mixedTimes.length];
+    if (!time) continue;
 
     const randomClient = randomFrom(clients);
-    const randomService = randomFrom(services);
+    const barberServices = services.filter((service) => service.barberId === time.barberId);
+    const randomService = randomFrom(barberServices.length ? barberServices : services);
     const barber = barbers.find((item) => item.id === time.barberId);
     if (!randomClient.user.customer || !barber) continue;
+    const minuteOffset = (index % 6) * 60;
+    const scheduledAt = new Date(time.startAt.getTime() + minuteOffset * 60 * 1000);
+    const scheduledEndAt = new Date(scheduledAt.getTime() + randomService.durationMinutes * 60 * 1000);
     const dayOffset = Math.round(
-      (time.date.getTime() - dateAtDayOffset(0, 0).getTime()) / (24 * 60 * 60 * 1000)
+      (scheduledAt.getTime() - dateAtDayOffset(0, 0).getTime()) / (24 * 60 * 60 * 1000)
     );
+    const breakStart = dateAtDayOffset(dayOffset, 12);
+    const breakEnd = dateAtDayOffset(dayOffset, 13);
+    const key = `${time.barberId}:${scheduledAt.toISOString()}`;
+    if (usedStarts.has(key) || scheduledEndAt > time.endAt) continue;
+    if (scheduledAt < breakEnd && scheduledEndAt > breakStart) continue;
+    if (usedIntervals.some((interval) =>
+      interval.barberId === time.barberId &&
+      scheduledAt < interval.end &&
+      scheduledEndAt > interval.start
+    )) continue;
+    usedStarts.add(key);
+    usedIntervals.push({ barberId: time.barberId, start: scheduledAt, end: scheduledEndAt });
     const status = getStatusForDayOffset(dayOffset);
 
     await prisma.appointment.create({
@@ -357,21 +405,17 @@ async function seedAppointments(
         clientId: randomClient.id,
         customerId: randomClient.user.customer.id,
         serviceId: randomService.id,
-        timeId: time.id,
         price: randomService.price,
         customerName: randomClient.user.customer.name,
         customerWhatsapp: randomClient.user.customer.whatsapp,
         barberName: barber.user.name,
         barberWhatsapp: barber.user.telephone,
         serviceName: randomService.name,
-        scheduledAt: time.date,
+        scheduledAt,
+        scheduledEndAt,
+        serviceDurationMinutes: randomService.durationMinutes,
         status,
       },
-    });
-
-    await prisma.time.update({
-      where: { id: time.id },
-      data: { disponible: false },
     });
   }
 }
@@ -435,7 +479,7 @@ async function main() {
     password: "Cliente@123",
   });
 
-  await seedServices(MIN_SERVICE_ROWS);
+  await seedServices();
 
   const createdTimes = await seedTimes(MIN_TIME_ROWS);
   await seedAppointments(MIN_APPOINTMENT_ROWS, createdTimes);

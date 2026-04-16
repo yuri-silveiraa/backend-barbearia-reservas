@@ -1,4 +1,6 @@
 import { IServiceRepository } from "../repositories/IServiceRepository";
+import { IBarbersRepository } from "../repositories/IBarberRepository";
+import { AppError } from "../errors/AppError";
 
 function decodeBase64Image(imageBase64: string): Uint8Array<ArrayBuffer> {
   const nodeBuffer = Buffer.from(imageBase64, "base64");
@@ -10,37 +12,49 @@ function decodeBase64Image(imageBase64: string): Uint8Array<ArrayBuffer> {
 
 export interface UpdateServiceDTO {
   id: string;
+  barberUserId: string;
   name?: string;
   price?: number;
   description?: string;
   imageBase64?: string;
   imageMimeType?: string;
   removeImage?: boolean;
-  duration?: number;
+  durationMinutes?: number;
   category?: string;
 }
 
 export class UpdateService {
-  constructor(private serviceRepository: IServiceRepository) {}
+  constructor(
+    private serviceRepository: IServiceRepository,
+    private barberRepository: IBarbersRepository,
+  ) {}
 
   async execute(data: UpdateServiceDTO) {
+    const barber = await this.barberRepository.findByUserId(data.barberUserId);
+    if (!barber || !barber.isActive) {
+      throw new AppError("Barbeiro não encontrado", 404);
+    }
+
     const service = await this.serviceRepository.findById(data.id);
 
     if (!service) {
       throw new Error("Serviço não encontrado");
+    }
+    if (service.barberId !== barber.id) {
+      throw new AppError("Serviço não pertence ao barbeiro autenticado", 403);
     }
 
     const updated = await this.serviceRepository.update(data.id, {
       name: data.name,
       price: data.price,
       description: data.description,
+      durationMinutes: data.durationMinutes,
       imageData: data.removeImage
         ? null
         : data.imageBase64
           ? decodeBase64Image(data.imageBase64)
           : undefined,
       imageMimeType: data.removeImage ? null : data.imageMimeType,
-      duration: data.duration,
       category: data.category,
     });
 

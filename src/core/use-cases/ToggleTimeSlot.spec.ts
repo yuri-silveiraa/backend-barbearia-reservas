@@ -22,13 +22,14 @@ describe("ToggleTimeSlot", () => {
     });
   });
 
-  it("deve alternar disponibilidade do horário", async () => {
+  it("deve retornar a jornada encontrada sem alterar disponibilidade", async () => {
     const timeSlots = await timeRepository.findByBarberId(barberId);
     const timeSlotId = timeSlots![0].id;
 
     const result = await sut.execute("barbeiro-user-1", timeSlotId);
 
-    expect(result.disponible).toBe(false);
+    expect(result.id).toBe(timeSlotId);
+    expect(result.barberId).toBe(barberId);
   });
 
   it("deve retornar erro se barbeiro não encontrado", async () => {
