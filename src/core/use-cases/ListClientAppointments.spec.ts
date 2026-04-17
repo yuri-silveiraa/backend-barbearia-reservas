@@ -26,8 +26,9 @@ describe("ListClientAppointments", () => {
 
     const appointments = await sut.execute("user-client-1");
 
-    expect(Array.isArray(appointments)).toBe(true);
-    expect(appointments.length).toBe(1);
+    expect(Array.isArray(appointments.data)).toBe(true);
+    expect(appointments.data).toHaveLength(1);
+    expect(appointments.total).toBe(1);
   });
 
   it("deve retornar lista vazia se não houver agendamentos", async () => {
@@ -37,6 +38,7 @@ describe("ListClientAppointments", () => {
 
     const appointments = await sut.execute("user-client-2");
 
-    expect(appointments).toEqual([]);
+    expect(appointments.data).toEqual([]);
+    expect(appointments.total).toBe(0);
   });
 });

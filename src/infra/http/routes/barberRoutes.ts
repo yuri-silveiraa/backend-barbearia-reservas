@@ -24,6 +24,12 @@ import { PrismaCustomerRepository } from "../../database/repositories/PrismaCust
 import { validate } from "../middlewares/validate";
 import { CreateManualAppointmentSchema } from "../schemas/input/CreateManualAppointment.schema";
 import { appointmentRateLimiter } from "../middlewares/rateLimit";
+import { ListCustomers } from "../../../core/use-cases/ListCustomers";
+import { ListCustomersController } from "../controllers/barber/ListCustomersController";
+import { BlockCustomer } from "../../../core/use-cases/BlockCustomer";
+import { UnblockCustomer } from "../../../core/use-cases/UnblockCustomer";
+import { BlockCustomerController } from "../controllers/barber/BlockCustomerController";
+import { UnblockCustomerController } from "../controllers/barber/UnblockCustomerController";
 
 const barberRoutes = Router();
 
@@ -49,6 +55,12 @@ const listBarberRevenueByRangeController = new ListBarberRevenueByRangeControlle
 
 const createManualAppointment = new CreateManualAppointment(appointmentRepo, barberRepo, customerRepo);
 const createManualAppointmentController = new CreateManualAppointmentController(createManualAppointment);
+const listCustomers = new ListCustomers(customerRepo);
+const listCustomersController = new ListCustomersController(listCustomers);
+const blockCustomer = new BlockCustomer(customerRepo, barberRepo);
+const blockCustomerController = new BlockCustomerController(blockCustomer);
+const unblockCustomer = new UnblockCustomer(customerRepo, barberRepo);
+const unblockCustomerController = new UnblockCustomerController(unblockCustomer);
 
 const createBarber = new CreateBarber(userRepo, barberRepo);
 const createBarberController = new CreateBarberController(createBarber);
@@ -89,6 +101,24 @@ barberRoutes.post(
   appointmentRateLimiter,
   validate(CreateManualAppointmentSchema),
   (req, res) => createManualAppointmentController.handle(req as AuthenticatedRequest, res)
+);
+
+barberRoutes.get(
+  "/customers",
+  ensureAdmin,
+  (req, res) => listCustomersController.handle(req as AuthenticatedRequest, res)
+);
+
+barberRoutes.patch(
+  "/customers/:id/block",
+  ensureAdmin,
+  (req, res) => blockCustomerController.handle(req as AuthenticatedRequest, res)
+);
+
+barberRoutes.patch(
+  "/customers/:id/unblock",
+  ensureAdmin,
+  (req, res) => unblockCustomerController.handle(req as AuthenticatedRequest, res)
 );
 
 barberRoutes.post(

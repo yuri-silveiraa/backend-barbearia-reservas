@@ -25,6 +25,10 @@ export class FakeServiceRepository implements IServiceRepository {
     return service || null;
   }
 
+  async findByIds(ids: string[]): Promise<Service[]> {
+    return this.services.filter((service) => ids.includes(service.id));
+  }
+
   async deleteById(id: string): Promise<void> {
     this.services = this.services.filter(s => s.id !== id);
   }

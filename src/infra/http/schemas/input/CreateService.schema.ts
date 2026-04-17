@@ -5,7 +5,7 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 export const CreateServiceSchema = z.object({
   name: z.string().min(2, "Nome é obrigatório"),
   price: z.number().min(0, "Preço deve ser maior ou igual a zero"),
-  durationMinutes: z.coerce.number().int().min(5, "Duração mínima é 5 minutos").max(480, "Duração máxima é 480 minutos"),
+  durationMinutes: z.coerce.number().int().min(15, "Duração mínima é 15 minutos").max(480, "Duração máxima é 480 minutos"),
   description: z.string().optional(),
   imageBase64: z
     .string()

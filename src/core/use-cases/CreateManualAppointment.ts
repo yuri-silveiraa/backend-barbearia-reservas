@@ -24,6 +24,9 @@ export class CreateManualAppointment {
       name: assertCustomerName(data.customerName),
       whatsapp: assertWhatsapp(data.customerWhatsapp),
     });
+    if (customer.blockedAt) {
+      throw new AppError("Cliente bloqueado para novos agendamentos", 403);
+    }
 
     const startAt = new Date(data.startAt);
     if (Number.isNaN(startAt.getTime())) {
@@ -34,7 +37,7 @@ export class CreateManualAppointment {
     for (const appointment of existingAppointments ?? []) {
       if (appointment.status !== "SCHEDULED") continue;
       const diff = Math.abs(appointment.time.getTime() - startAt.getTime());
-      if (diff < 7 * 24 * 60 * 60 * 1000) {
+      if (diff < 5 * 24 * 60 * 60 * 1000) {
         throw new ClientScheduleSpacingError();
       }
     }
@@ -42,6 +45,7 @@ export class CreateManualAppointment {
     return await this.appointmentRepository.create({
       barberId: barber.id,
       serviceId: data.serviceId,
+      serviceIds: [data.serviceId],
       startAt,
       customerId: customer.id,
       clientId: null,

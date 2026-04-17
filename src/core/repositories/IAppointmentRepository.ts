@@ -2,6 +2,8 @@ import { AppointmentDTO } from '../dtos/AppointmentDTO';
 import { BarberCompletedAppointmentDTO } from '../dtos/BarberCompletedAppointmentDTO';
 import { Appointment } from '../entities/Appointment';
 
+export type AppointmentCancelOrigin = "CLIENT" | "BARBER";
+
 export interface CreateAppointmentRepositoryDTO {
   barberId: string;
   serviceId: string;
@@ -35,5 +37,5 @@ export interface IAppointmentsRepository {
   countByClientSince(clientId: string, since: Date): Promise<number>;
   countCompletedByBarberToday(barberId: string, date: Date): Promise<number>;
   attend(id: string): Promise<boolean>;
-  canceled(id: string): Promise<void>;
+  canceled(id: string, canceledBy?: AppointmentCancelOrigin): Promise<void>;
 }

@@ -44,6 +44,10 @@ export class UpdateService {
       throw new AppError("Serviço não pertence ao barbeiro autenticado", 403);
     }
 
+    if (data.durationMinutes !== undefined && (!Number.isInteger(data.durationMinutes) || data.durationMinutes < 15)) {
+      throw new AppError("Duração mínima é 15 minutos", 400);
+    }
+
     const updated = await this.serviceRepository.update(data.id, {
       name: data.name,
       price: data.price,

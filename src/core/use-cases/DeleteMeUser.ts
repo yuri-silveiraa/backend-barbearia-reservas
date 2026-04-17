@@ -22,7 +22,7 @@ export class DeleteMeUser {
     const client = await this.clientsRepository.findByUserId(userId);
     if (client) {
       const appointments = await this.appointmentsRepository.findByClientId(client.id);
-      for (const appointment of appointments) {
+      for (const appointment of appointments.data) {
         if (appointment.status === "SCHEDULED") {
           await this.appointmentsRepository.canceled(appointment.id);
         }

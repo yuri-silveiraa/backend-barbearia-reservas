@@ -40,4 +40,15 @@ describe("CreateService", () => {
       durationMinutes: 45,
     }, "missing-user")).rejects.toThrow("Barbeiro não encontrado");
   });
+
+  it("deve bloquear serviço com duração menor que 15 minutos", async () => {
+    await barberRepository.create({ userId: "barber-user-min", isAdmin: false });
+
+    await expect(sut.execute({
+      name: "Retoque rápido",
+      description: "Serviço rápido demais",
+      price: 15,
+      durationMinutes: 10,
+    }, "barber-user-min")).rejects.toThrow("Duração mínima é 15 minutos");
+  });
 });

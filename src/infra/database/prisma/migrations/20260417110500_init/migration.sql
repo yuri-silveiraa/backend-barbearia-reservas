@@ -7,6 +7,9 @@ CREATE TYPE "UserType" AS ENUM ('BARBER', 'CLIENT');
 -- CreateEnum
 CREATE TYPE "AppointmentStatus" AS ENUM ('SCHEDULED', 'COMPLETED', 'CANCELED');
 
+-- CreateEnum
+CREATE TYPE "AppointmentCanceledBy" AS ENUM ('CLIENT', 'BARBER');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -54,6 +57,9 @@ CREATE TABLE "Customer" (
     "name" TEXT NOT NULL,
     "whatsapp" TEXT NOT NULL,
     "userId" TEXT,
+    "blockedAt" TIMESTAMP(3),
+    "blockedReason" TEXT,
+    "blockedByBarberId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -97,15 +103,19 @@ CREATE TABLE "Appointment" (
     "clientId" TEXT,
     "customerId" TEXT NOT NULL,
     "serviceId" TEXT NOT NULL,
+    "serviceIds" TEXT[],
     "price" DOUBLE PRECISION NOT NULL,
     "customerName" TEXT NOT NULL,
     "customerWhatsapp" TEXT NOT NULL,
     "barberName" TEXT NOT NULL,
     "barberWhatsapp" TEXT,
     "serviceName" TEXT NOT NULL,
+    "serviceNames" TEXT[],
     "scheduledAt" TIMESTAMP(3) NOT NULL,
     "scheduledEndAt" TIMESTAMP(3) NOT NULL,
     "serviceDurationMinutes" INTEGER NOT NULL,
+    "serviceDurations" INTEGER[],
+    "canceledBy" "AppointmentCanceledBy",
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
@@ -140,6 +150,9 @@ ALTER TABLE "Client" ADD CONSTRAINT "Client_userId_fkey" FOREIGN KEY ("userId") 
 
 -- AddForeignKey
 ALTER TABLE "Customer" ADD CONSTRAINT "Customer_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Customer" ADD CONSTRAINT "Customer_blockedByBarberId_fkey" FOREIGN KEY ("blockedByBarberId") REFERENCES "Barber"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Service" ADD CONSTRAINT "Service_barberId_fkey" FOREIGN KEY ("barberId") REFERENCES "Barber"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

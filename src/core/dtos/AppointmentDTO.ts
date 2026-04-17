@@ -16,4 +16,5 @@ export interface AppointmentDTO {
   serviceDurations?: number[];
   price: number;
   status: string;
+  canceledBy?: "CLIENT" | "BARBER" | null;
 }

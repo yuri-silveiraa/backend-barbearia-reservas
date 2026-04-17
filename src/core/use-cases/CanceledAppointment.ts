@@ -18,6 +18,7 @@ export class CanceledAppointment {
     }
 
     const client = await this.clientRepository.findByUserId(clientId);
+    let canceledBy: "CLIENT" | "BARBER" = "CLIENT";
     if (client) {
       if (appointment.clientId !== client.id) {
         throw new NoAuthorizationError();
@@ -27,6 +28,7 @@ export class CanceledAppointment {
       if (!barber || appointment.barberId !== barber.id) {
         throw new NoAuthorizationError();
       }
+      canceledBy = "BARBER";
     }
 
     if (appointment.status === "COMPLETED") {
@@ -37,6 +39,6 @@ export class CanceledAppointment {
       return;
     }
 
-    await this.appointmentRepository.canceled(appointmentId);
+    await this.appointmentRepository.canceled(appointmentId, canceledBy);
   }
 }

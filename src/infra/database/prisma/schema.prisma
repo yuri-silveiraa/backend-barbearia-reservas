@@ -16,6 +16,11 @@ enum AppointmentStatus {
   CANCELED
 }
 
+enum AppointmentCanceledBy {
+  CLIENT
+  BARBER
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -45,6 +50,7 @@ model Barber {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   appointments Appointment[]
+  blockedCustomers Customer[] @relation("BlockedCustomers")
   times     Time[]
   services  Service[]
 }
@@ -64,6 +70,10 @@ model Customer {
   userId    String?  @unique
   user      User?    @relation("UserCustomer", fields: [userId], references: [id])
   appointments Appointment[]
+  blockedAt DateTime?
+  blockedReason String?
+  blockedByBarberId String?
+  blockedByBarber Barber? @relation("BlockedCustomers", fields: [blockedByBarberId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -113,6 +123,7 @@ model Appointment {
   scheduledEndAt DateTime
   serviceDurationMinutes Int
   serviceDurations Int[]
+  canceledBy AppointmentCanceledBy?
   service    Service    @relation(fields: [serviceId], references: [id])
   client     Client?    @relation(fields: [clientId], references: [id])
   customer   Customer   @relation(fields: [customerId], references: [id])

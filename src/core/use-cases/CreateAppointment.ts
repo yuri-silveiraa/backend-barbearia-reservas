@@ -22,6 +22,10 @@ export class CreateAppointment {
     }
 
     const customer = await this.customerRepository.findOrCreateFromUser(data.clientId);
+    if (customer.blockedAt) {
+      throw new AppError("Cliente bloqueado para novos agendamentos", 403);
+    }
+
     const startAt = new Date(data.startAt);
     if (Number.isNaN(startAt.getTime())) {
       throw new AppError("Horário inválido", 400);
@@ -51,10 +55,10 @@ export class CreateAppointment {
     if (existingAppointments && existingAppointments.length > 0) {
       const scheduledAppointments = existingAppointments.filter((appointment) => appointment.status === "SCHEDULED");
       if (scheduledAppointments.length > 0) {
-        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+        const fiveDaysMs = 5 * 24 * 60 * 60 * 1000;
         for (const appointment of scheduledAppointments) {
           const diff = Math.abs(appointment.time.getTime() - startAt.getTime());
-          if (diff < sevenDaysMs) {
+          if (diff < fiveDaysMs) {
             throw new ClientScheduleSpacingError();
           }
         }

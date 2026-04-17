@@ -51,13 +51,13 @@ describe("CreateManualAppointment", () => {
       customerName: "Yuri Pires",
       customerWhatsapp: "11912345678",
       serviceId: "service-1",
-      startAt: "2026-04-08T10:00:00.000Z",
+      startAt: "2026-04-06T10:00:00.000Z",
     });
 
     expect(second.customerId).toBe(first.customerId);
   });
 
-  it("deve bloquear cliente com agendamento marcado a menos de 7 dias", async () => {
+  it("deve bloquear cliente com agendamento marcado a menos de 5 dias", async () => {
     await barberRepository.create({ userId: "barber-user-1", isAdmin: false });
 
     await sut.execute({
@@ -73,7 +73,24 @@ describe("CreateManualAppointment", () => {
       customerName: "Yuri Pires",
       customerWhatsapp: "11912345678",
       serviceId: "service-1",
-      startAt: "2026-04-06T10:00:00.000Z",
+      startAt: "2026-04-05T10:00:00.000Z",
     })).rejects.toThrow(ClientScheduleSpacingError);
+  });
+
+  it("deve bloquear agendamento manual para WhatsApp bloqueado", async () => {
+    await barberRepository.create({ userId: "barber-user-1", isAdmin: false });
+    const customer = await customerRepository.findOrCreateByWhatsapp({
+      name: "Yuri Pires",
+      whatsapp: "11912345678",
+    });
+    await customerRepository.block(customer.id, "barber-admin-1", "Faltas sem aviso");
+
+    await expect(sut.execute({
+      barberUserId: "barber-user-1",
+      customerName: "Yuri Pires",
+      customerWhatsapp: "11912345678",
+      serviceId: "service-1",
+      startAt: "2026-04-10T10:00:00.000Z",
+    })).rejects.toThrow("Cliente bloqueado para novos agendamentos");
   });
 });

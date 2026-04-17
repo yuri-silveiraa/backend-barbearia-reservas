@@ -1,4 +1,5 @@
 export type AppointmentStatus = "SCHEDULED" | "COMPLETED" | "CANCELED";
+export type AppointmentCanceledBy = "CLIENT" | "BARBER";
 
 export class Appointment {
   constructor(
@@ -17,6 +18,7 @@ export class Appointment {
     public readonly clientId?: string | null,
     public price: number = 0,
     public status: AppointmentStatus = "SCHEDULED",
+    public canceledBy?: AppointmentCanceledBy | null,
     public readonly createdAt: Date = new Date()
   ) {}
 }

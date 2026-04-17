@@ -1,7 +1,7 @@
 import { AppointmentDTO } from "../../../core/dtos/AppointmentDTO";
 import { Appointment } from "../../../core/entities/Appointment";
 import { AppError } from "../../../core/errors/AppError";
-import { CreateAppointmentRepositoryDTO, IAppointmentsRepository } from "../../../core/repositories/IAppointmentRepository";
+import { AppointmentCancelOrigin, CreateAppointmentRepositoryDTO, IAppointmentsRepository } from "../../../core/repositories/IAppointmentRepository";
 import { prisma } from "../prisma/prismaClient";
 
 export class PrismaAppointmentRepository implements IAppointmentsRepository {
@@ -156,10 +156,10 @@ export class PrismaAppointmentRepository implements IAppointmentsRepository {
     return updated.count > 0;
   }
 
-  async canceled(id: string): Promise<void> {
+  async canceled(id: string, canceledBy: AppointmentCancelOrigin = "CLIENT"): Promise<void> {
     await prisma.appointment.update({
       where: { id },
-      data: { status: "CANCELED" },
+      data: { status: "CANCELED", canceledBy },
     });
   }
 
@@ -280,6 +280,7 @@ const appointmentSelect = {
   scheduledEndAt: true,
   serviceDurationMinutes: true,
   serviceDurations: true,
+  canceledBy: true,
 } as const;
 
 function toAppointmentDTO(appointment: {
@@ -300,6 +301,7 @@ function toAppointmentDTO(appointment: {
   scheduledEndAt: Date;
   serviceDurationMinutes: number;
   serviceDurations: number[];
+  canceledBy: "CLIENT" | "BARBER" | null;
 }): AppointmentDTO {
   return {
     id: appointment.id,
@@ -319,5 +321,6 @@ function toAppointmentDTO(appointment: {
     serviceDurations: appointment.serviceDurations?.length ? appointment.serviceDurations : undefined,
     price: appointment.price,
     status: appointment.status,
+    canceledBy: appointment.canceledBy,
   };
 }

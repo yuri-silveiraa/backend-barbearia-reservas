@@ -8,7 +8,7 @@ describe("CreateAppointmentController", () => {
         id: "1",
         barberId: "barber-1",
         clientId: "client-1",
-        serviceId: "service-1",
+        serviceIds: ["service-1"],
         scheduledAt: new Date("2030-04-10T10:00:00.000Z"),
         scheduledEndAt: new Date("2030-04-10T10:30:00.000Z"),
         serviceDurationMinutes: 30,
@@ -23,7 +23,7 @@ describe("CreateAppointmentController", () => {
       user: { id: "client-1" },
       body: {
         barberId: "barber-1",
-        serviceId: "service-1",
+        serviceIds: ["service-1"],
         startAt: "2030-04-10T10:00:00.000Z",
       },
     });
@@ -35,7 +35,7 @@ describe("CreateAppointmentController", () => {
     expect(mockCreateAppointment.execute).toHaveBeenCalledWith({
       barberId: "barber-1",
       clientId: "client-1",
-      serviceId: "service-1",
+      serviceIds: ["service-1"],
       startAt: "2030-04-10T10:00:00.000Z",
     });
 
@@ -54,7 +54,7 @@ describe("CreateAppointmentController", () => {
       user: {} as any,
       body: {
         barberId: "barber-1",
-        serviceId: "service-1",
+        serviceIds: ["service-1"],
         startAt: "2030-04-10T10:00:00.000Z",
       },
     });

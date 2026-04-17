@@ -23,6 +23,10 @@ export class CreateService {
       throw new AppError("Barbeiro não encontrado", 404);
     }
 
+    if (!Number.isInteger(data.durationMinutes) || data.durationMinutes < 15) {
+      throw new AppError("Duração mínima é 15 minutos", 400);
+    }
+
     const service = await this.serviceRepository.create({
       name: data.name,
       price: data.price,

@@ -1,13 +1,20 @@
 import { AppointmentDTO } from "../../core/dtos/AppointmentDTO";
 import { Appointment } from "../../core/entities/Appointment";
-import { CreateAppointmentRepositoryDTO, IAppointmentsRepository } from "../../core/repositories/IAppointmentRepository";
+import { AppointmentCancelOrigin, CreateAppointmentRepositoryDTO, IAppointmentsRepository, PaginatedAppointments } from "../../core/repositories/IAppointmentRepository";
+
+type FakeCreateAppointmentDTO = Partial<CreateAppointmentRepositoryDTO> & {
+  barberId: string;
+  serviceId: string;
+  timeId?: string;
+  startAt?: Date;
+};
 
 export class FakeAppointmentRepository implements IAppointmentsRepository {
   private appointments: Appointment[] = [];
 
-  async create(data: CreateAppointmentRepositoryDTO | (Omit<CreateAppointmentRepositoryDTO, "startAt"> & { timeId?: string; startAt?: Date })): Promise<Appointment> {
+  async create(data: FakeCreateAppointmentDTO): Promise<Appointment> {
     const scheduledAt = data.startAt ?? new Date("2030-04-10T10:00:00.000Z");
-    const serviceDurationMinutes = 30;
+    const serviceDurationMinutes = data.totalDuration ?? 30;
     const appointment: Appointment = {
       id: String(this.appointments.length + 1),
       barberId: data.barberId,
@@ -24,14 +31,23 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
       serviceDurationMinutes,
       price: data.price ?? 0,
       status: "SCHEDULED",
+      canceledBy: null,
       createdAt: new Date(),
     };
     this.appointments.push(appointment);
     return appointment;
   }
 
-  async findByClientId(id: string): Promise<AppointmentDTO[] | null> {
-    return this.appointments.filter(a => a.clientId === id).map(a => this.toDTO(a));
+  async findByClientId(id: string, page = 1, limit = 10): Promise<PaginatedAppointments> {
+    const all = this.appointments.filter(a => a.clientId === id).map(a => this.toDTO(a));
+    const start = (page - 1) * limit;
+    const data = all.slice(start, start + limit);
+    return {
+      data,
+      total: all.length,
+      page,
+      totalPages: Math.ceil(all.length / limit),
+    };
   }
 
   async findByCustomerId(id: string): Promise<AppointmentDTO[] | null> {
@@ -118,10 +134,11 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
     return false;
   }
 
-  async canceled(id: string): Promise<void> {
+  async canceled(id: string, canceledBy: AppointmentCancelOrigin = "CLIENT"): Promise<void> {
     const appointment = this.appointments.find(a => a.id === id);
     if (appointment) {
       appointment.status = "CANCELED";
+      appointment.canceledBy = canceledBy;
     }
   }
 
@@ -142,6 +159,7 @@ export class FakeAppointmentRepository implements IAppointmentsRepository {
       serviceDurationMinutes: appointment.serviceDurationMinutes,
       price: appointment.price,
       status: appointment.status,
+      canceledBy: appointment.canceledBy,
     };
   }
 }

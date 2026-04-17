@@ -45,6 +45,7 @@ describe("CanceledAppointment", () => {
 
     const canceled = await appointmentRepository.findById(appointment.id);
     expect(canceled?.status).toBe("CANCELED");
+    expect(canceled?.canceledBy).toBe("CLIENT");
   });
 
   it("deve permitir barbeiro cancelar agendamento do próprio barbeiro", async () => {
@@ -61,6 +62,7 @@ describe("CanceledAppointment", () => {
 
     const canceled = await appointmentRepository.findById(appointment.id);
     expect(canceled?.status).toBe("CANCELED");
+    expect(canceled?.canceledBy).toBe("BARBER");
   });
 
   it("não deve cancelar agendamento já concluído", async () => {
