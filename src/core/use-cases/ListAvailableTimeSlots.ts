@@ -19,9 +19,18 @@ export interface ListAvailableTimeSlotsInput {
   endDate?: string;
 }
 
-export class ListAvailableTimeSlots {
-  private readonly SLOT_GRANULARITY_MINUTES = 15;
+type FreeWindow = {
+  start: DateTime;
+  end: DateTime;
+  endsBeforeBlock: boolean;
+};
 
+type Block = {
+  start: DateTime;
+  end: DateTime;
+};
+
+export class ListAvailableTimeSlots {
   constructor(
     private timeRepository: ITimeRepository,
     private serviceRepository: IServiceRepository,
@@ -32,8 +41,100 @@ export class ListAvailableTimeSlots {
     return startA.getTime() < endB.getTime() && endA.getTime() > startB.getTime();
   }
 
-  private getTotalDuration(serviceIds: string[]): number {
-    return 0;
+  private dateTimeOverlaps(startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime): boolean {
+    return startA < endB && endA > startB;
+  }
+
+  private getMinActiveServiceDuration(services: Array<{ durationMinutes: number }>): number {
+    const durations = services
+      .map((service) => service.durationMinutes)
+      .filter((duration) => Number.isFinite(duration) && duration >= 15);
+
+    if (durations.length === 0) {
+      throw new AppError("Barbeiro não possui serviços ativos", 400);
+    }
+
+    return Math.min(...durations);
+  }
+
+  private buildFreeWindows(availabilityStart: DateTime, availabilityEnd: DateTime, blocks: Block[]): FreeWindow[] {
+    const freeWindows: FreeWindow[] = [];
+    const sortedBlocks = blocks
+      .filter((block) => this.dateTimeOverlaps(block.start, block.end, availabilityStart, availabilityEnd))
+      .map((block) => ({
+        start: block.start < availabilityStart ? availabilityStart : block.start,
+        end: block.end > availabilityEnd ? availabilityEnd : block.end,
+      }))
+      .filter((block) => block.end > block.start)
+      .sort((a, b) => a.start.toMillis() - b.start.toMillis());
+
+    let cursor = availabilityStart;
+
+    for (const block of sortedBlocks) {
+      if (block.start > cursor) {
+        freeWindows.push({ start: cursor, end: block.start, endsBeforeBlock: true });
+      }
+
+      if (block.end > cursor) {
+        cursor = block.end;
+      }
+    }
+
+    if (cursor < availabilityEnd) {
+      freeWindows.push({ start: cursor, end: availabilityEnd, endsBeforeBlock: false });
+    }
+
+    return freeWindows;
+  }
+
+  private createSlot(start: DateTime, totalDuration: number): AvailableTimeSlot {
+    const slotStart = start.toUTC().toJSDate();
+    return {
+      id: slotStart.toISOString(),
+      startAt: slotStart,
+      endAt: start.plus({ minutes: totalDuration }).toUTC().toJSDate(),
+      date: slotStart,
+    };
+  }
+
+  private slotOverlaps(startA: Date, endA: Date, startB: Date, endB: Date): boolean {
+    return this.overlaps(startA, endA, startB, endB);
+  }
+
+  private addWindowSlots(
+    slots: AvailableTimeSlot[],
+    freeWindow: FreeWindow,
+    totalDuration: number,
+    slotStepMinutes: number,
+    now: DateTime,
+  ) {
+    const windowSlots: AvailableTimeSlot[] = [];
+    let cursor = freeWindow.start;
+
+    while (cursor.plus({ minutes: totalDuration }) <= freeWindow.end) {
+      if (cursor >= now) {
+        windowSlots.push(this.createSlot(cursor, totalDuration));
+      }
+      cursor = cursor.plus({ minutes: slotStepMinutes });
+    }
+
+    const specialStart = freeWindow.end.minus({ minutes: totalDuration });
+    const canUseSpecialFit =
+      freeWindow.endsBeforeBlock &&
+      specialStart >= freeWindow.start &&
+      specialStart >= now &&
+      !windowSlots.some((slot) => slot.startAt.getTime() === specialStart.toUTC().toJSDate().getTime());
+
+    if (canUseSpecialFit) {
+      const specialSlot = this.createSlot(specialStart, totalDuration);
+      const nonOverlappingSlots = windowSlots.filter((slot) =>
+        !this.slotOverlaps(slot.startAt, slot.endAt, specialSlot.startAt, specialSlot.endAt)
+      );
+      slots.push(...nonOverlappingSlots, specialSlot);
+      return;
+    }
+
+    slots.push(...windowSlots);
   }
 
   async execute(input: ListAvailableTimeSlotsInput): Promise<AvailableTimeSlot[]> {
@@ -47,6 +148,9 @@ export class ListAvailableTimeSlots {
     if (services.length === 0) {
       throw new AppError("Serviços não encontrados", 404);
     }
+
+    const activeBarberServices = await this.serviceRepository.findAll(input.barberId);
+    const slotStepMinutes = this.getMinActiveServiceDuration(activeBarberServices);
 
     for (const service of services) {
       if (!service.active) {
@@ -85,47 +189,29 @@ export class ListAvailableTimeSlots {
       const availabilityStart = DateTime.fromJSDate(availability.startAt).setZone(BUSINESS_TIMEZONE);
       const availabilityEnd = DateTime.fromJSDate(availability.endAt).setZone(BUSINESS_TIMEZONE);
 
-      const chainPoints: DateTime[] = [availabilityStart];
-
-      for (const appointment of sortedAppointments) {
-        const appointmentEnd = DateTime.fromJSDate(appointment.endTime).setZone(BUSINESS_TIMEZONE);
-        if (appointmentEnd > availabilityStart && appointmentEnd < availabilityEnd) {
-          chainPoints.push(appointmentEnd);
-        }
+      const blocks: Block[] = [];
+      if (availability.breakStartAt && availability.breakEndAt) {
+        blocks.push({
+          start: DateTime.fromJSDate(availability.breakStartAt).setZone(BUSINESS_TIMEZONE),
+          end: DateTime.fromJSDate(availability.breakEndAt).setZone(BUSINESS_TIMEZONE),
+        });
       }
 
-      const uniqueChainPoints = [...new Set(chainPoints.map(cp => cp.toMillis()))]
-        .map(ms => DateTime.fromMillis(ms, { zone: BUSINESS_TIMEZONE }))
-        .sort((a, b) => a.toMillis() - b.toMillis());
+      for (const appointment of sortedAppointments) {
+        blocks.push({
+          start: DateTime.fromJSDate(appointment.time).setZone(BUSINESS_TIMEZONE),
+          end: DateTime.fromJSDate(appointment.endTime).setZone(BUSINESS_TIMEZONE),
+        });
+      }
 
-      for (const chainPoint of uniqueChainPoints) {
-        if (chainPoint < now) continue;
+      const freeWindows = this.buildFreeWindows(availabilityStart, availabilityEnd, blocks);
 
-        let cursor = chainPoint;
-
-        while (cursor.plus({ minutes: totalDuration }) <= availabilityEnd) {
-          const slotStart = cursor.toUTC().toJSDate();
-          const slotEnd = cursor.plus({ minutes: totalDuration }).toUTC().toJSDate();
-
-          const crossesBreak = availability.breakStartAt && availability.breakEndAt
-            ? this.overlaps(slotStart, slotEnd, availability.breakStartAt, availability.breakEndAt)
-            : false;
-
-          const conflictsAppointment = appointments.some((appointment) =>
-            this.overlaps(slotStart, slotEnd, appointment.time, appointment.endTime)
-          );
-
-          if (slotStart >= now.toUTC().toJSDate() && !crossesBreak && !conflictsAppointment) {
-            slots.push({
-              id: slotStart.toISOString(),
-              startAt: slotStart,
-              endAt: slotEnd,
-              date: slotStart,
-            });
-          }
-
-          cursor = cursor.plus({ minutes: this.SLOT_GRANULARITY_MINUTES });
+      for (const freeWindow of freeWindows) {
+        if (freeWindow.end <= now) {
+          continue;
         }
+
+        this.addWindowSlots(slots, freeWindow, totalDuration, slotStepMinutes, now);
       }
     }
 
